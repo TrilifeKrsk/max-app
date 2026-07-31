@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Заказ товаров</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background-color: #f4f6f8;
+      color: #333;
+      padding: 16px;
+      padding-bottom: 40px;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    h2 {
+      font-size: 18px;
+      margin-bottom: 12px;
+      color: #1a1a1a;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .item:last-child {
+      border-bottom: none;
+    }
+    .item-info {
+      flex: 1;
+    }
+    .item-title {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    .item-price {
+      font-size: 14px;
+      color: #666;
+    }
+    .btn {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:active {
+      transform: scale(0.98);
+    }
+    .btn-add {
+      background: #007bf5;
+    }
+    .btn-qty {
+      background: #e9ecef;
+      color: #333;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 6px;
+    }
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .qty-val {
+      font-weight: 600;
+      font-size: 14px;
+      min-width: 18px;
+      text-align: center;
+    }
+    .cart-item-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: #444;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 12px;
+      margin-bottom: 16px;
+      color: #111;
+    }
+    .input-field {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      border: 1px solid #dcdfe6;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-field:focus {
+      border-color: #007bff;
+    }
+    .btn-submit {
+      width: 100%;
+      background: #28a745;
+      color: white;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 8px;
+      margin-top: 6px;
+    }
+    .empty-cart {
+      color: #888;
+      font-size: 14px;
+      text-align: center;
+      padding: 10px 0;
+    }
+    .manager-badge {
+      font-size: 12px;
+      color: #666;
+      background: #eef2f5;
+      padding: 6px 10px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div id="manager-info" class="manager-badge">Ваш менеджер: определяется...</div>
+
+    <h2>Каталог товаров</h2>
+    <div class="card" id="catalog"></div>
+
+    <h2>Оформление заказа</h2>
+    <div class="card">
+      <div id="cart-list" class="empty-cart">Корзина пуста</div>
+      
+      <div id="cart-summary-block" style="display: none;">
+        <div class="total-row">
+          <span>Итого:</span>
+          <span><span id="total-price">0</span> руб.</span>
+        </div>
+
+        <input type="text" id="client-company" class="input-field" placeholder="Название компании / ИП / Клиники">
+        <input type="text" id="client-name" class="input-field" placeholder="Ваше имя *" required>
+        <input type="tel" id="client-phone" class="input-field" placeholder="Ваш телефон *" required>
+<button class="btn btn-submit" onclick="sendOrder()">Оформить заказ</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. ВСТАВЬТЕ СЮДА ССЫЛКУ НА ВАШ ВХОДЯЩИЙ ВЕБХУК БИТРИКС24
+    // (Обязательно со слэшем "/" на конце)
+    // =========================================================================
+    const BITRIX_WEBHOOK_URL = https://b24-5qamxl.bitrix24.ru/rest/12/w655fv23viloze7i/';
+
+    // 2. Считываем менеджера из URL параметра (?manager=Иван_Иванов)
+    const urlParams = new URLSearchParams(window.location.search
+);
+    const managerName = urlParams.get('manager') || 'Не указан';
+    document.getElementById('manager-info').innerText = 'Ваш менеджер: ' + managerName;
+
+    // 3. Каталог товаров (здесь изменяйте наименования и цены)
+    const products = [
+      { id: 1, name: 'Товар Позиция 1', price: 1000 },
+      { id: 2, name: 'Товар Позиция 2', price: 2500 },
+      { id: 3, name: 'Набор / Услуга 3', price: 5000 }
+    ];
+
+    // Хранилище корзины { productId: quantity }
+    let cart = {};
+
+    // Отрисовка каталога
+    function renderCatalog() {
+      const catalogEl = document.getElementById('catalog');
+      catalogEl.innerHTML = '';
+
+      products.forEach(p => {
+        const qty = cart[p.id
+] || 0;
+        
+        let actionBtnHTML = '';
+        if (qty === 0) {
+          actionBtnHTML = `<button class="btn btn-add" onclick="addToCart(${p.id
+})">+ Добавить</button>`;
+        } else {
+          actionBtnHTML = `
+            <div class="qty-controls">
+              <button class="btn btn-qty" onclick="removeFromCart(${p.id
+})">-</button>
+              <span class="qty-val">${qty}</span>
+              <button class="btn btn-qty" onclick="addToCart(${p.id
+})">+</button>
+            </div>
+          `;
+        }
+
+        catalogEl.innerHTML += `
+          <div class="item">
+            <div class="item-info">
+              <div class="item-title">${p.name
+}</div>
+              <div class="item-price">${p.price.toLocaleString('ru-RU')} руб.</div>
+            </div>
+            ${actionBtnHTML}
+          </div>
+        `;
+      });
+    }
+
+    function addToCart(id) {
+      cart[id] = (cart[id] || 0) + 1;
+      renderCatalog();
+      renderCart();
+    }
+
+    function removeFromCart(id) {
+      if (cart[id]) {
+        cart[id]--;
+        if (cart[id] === 0) {
+          delete cart[id];
+        }
+      }
+      renderCatalog();
+      renderCart();
+    }
+
+    function renderCart() {
+      const cartEl = document.getElementById('cart-list');
+      const summaryBlock = document.getElementById('cart-summary-block');
+      let total = 0;
+      let html = '';
+
+      const cartKeys = Object.keys(cart);
+
+      if (cartKeys.length === 0) {
+        cartEl.innerHTML = '<div class="empty-cart">Корзина пуста. Добавьте товары из каталога выше.</div>';
+        summaryBlock.style.display = 'none';
+        return;
+      }
+
+      cartKeys.forEach(id => {
+        const prod = products.find(p => p.id
+ == id);
+        const qty = cart[id];
+        const sum = prod.price * qty;
+        total += sum;
+        html += `
+          <div class="cart-item-row">
+            <span>${prod.name
+} (x${qty})</span>
+            <span>${sum.toLocaleString('ru-RU')} руб.</span>
+          </div>
+        `;
+      });
+
+      cartEl.innerHTML = html;
+      document.getElementById('total-price').innerText = total.toLocaleString('ru-RU');
+      summaryBlock.style.display = 'block';
+    }
+
+    async function sendOrder() {
+      const company = document.getElementById('client-company').value.trim();
+      const name = document.getElementById('client-name').value.trim();
+      const phone = document.getElementById('client-phone').value.trim();
+
+      if (!name || !phone) {
+        alert('Пожалуйста, заполните Имя и Телефон.');
+        return;
+      }
+
+      // Формируем текст состава заказа
+      let orderDetails = '';
+      let totalAmount = 0;
+
+      for (let id in cart) {
+        const prod = products.find(p => p.id
+ == id);
+        const qty = cart[id];
+        const sum = prod.price * qty;
+        totalAmount += sum;
+        orderDetails += `- ${prod.name
+}: ${qty} шт. (${sum.toLocaleString('ru-RU')} руб.)\n`;
+      }
+
+      if (!orderDetails) {
+        alert('Корзина пуста!');
+        return;
+      }
+
+      // Формируем детальный комментарий для робота Битрикс24
+      const commentText = `Менеджер: ${managerName}\nОрганизация: ${company || 'Не указана'}\nСостав заказа:\n${orderDetails}`;
+
+      // Заголовок сделки (если указали компанию — будет название компании)
+      const dealTitle = company ? `Заказ: ${company}` : `Заказ: ${name}`;
+
+      // Отправка запроса в Битрикс24
+      try {
+        const response = await fetch(BITRIX_WEBHOOK_URL + 'crm.deal.add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fields: {
+              TITLE: dealTitle,
+              COMMENTS: commentText,
+              OPPORTUNITY: totalAmount,
+              NAME: name,
+              PHONE: [{ VALUE: phone, VALUE_TYPE: "WORK" }]
+            }
+          })
+        });
+
+        if (response.ok) {
+          alert('Спасибо! Ваш заказ успешно оформлен.');
+          cart = {};
+          document.getElementById('client-company').value = '';
+          document.getElementById('client-name').value = '';
+          document.getElementById('client-phone').value = '';
+          renderCatalog();
+          renderCart();
+        } else {
+          alert('Произошла ошибка при отправке заказа в Битрикс24.');
+        }
+      } catch (e) {
+        alert('Ошибка соединения: ' + e.message);
+      }
+    }
+
+    // Инициализация при загрузке страницы
+    renderCatalog();
+    renderCart();
+  </script>
+
+</body>
+</html>
