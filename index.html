@@ -2005,7 +2005,7 @@ let cart = [];
     let name = document.getElementById('cName').value;
     let phone = document.getElementById('cPhone').value;
     let org = document.getElementById('cOrg').value;
-    let calc = calculateCartSum(cart);
+    let calc = calculateCartSum(cart); // Здесь считается сумма (calc.sum)
 
     let productsDetails = cart.map(c => {
         let price = getPackPriceForTier(c, calc.tier);
@@ -2026,6 +2026,8 @@ let cart = [];
             TITLE: `Заказ от ${org ? org : name}`,
             NAME: name,
             PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
+            OPPORTUNITY: calc.sum, // <--- ВОТ ЭТО ПОЛЕ ПЕРЕДАЕТ СУММУ В БИТРИКС
+            CURRENCY_ID: 'RUB',    // <--- Валюта (рубли)
             COMMENTS: comment,
             SOURCE_ID: 'WEB'
         }
@@ -2039,27 +2041,21 @@ let cart = [];
         });
 
         let result = await response.json();
-        console.log('Ответ от Битрикс24:', result);
 
         if (result.result) {
-            alert(`Спасибо! Заказ на сумму ${calc.sum.toLocaleString()} руб. успешно создан в Битрикс24 (Лид №${result.result}).`);
+            alert(`Спасибо! Заказ на сумму ${calc.sum.toLocaleString()} руб. успешно создан!`);
             cart = [];
             updateCartUI();
             if (event.target && typeof event.target.reset === 'function') {
                 event.target.reset();
             }
-            // Закрыть мини-приложение в Telegram (опционально)
             if (window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.close();
             }
         } else {
-            // Если Битрикс вернул ошибку внутри JSON (например, неверные права или формат)
-            console.error('Ошибка Битрикса:', result);
-            alert('Битрикс отклонил запрос: ' + (result.error_description || JSON.stringify(result)));
+            alert('Ошибка от Битрикс: ' + (result.error_description || JSON.stringify(result)));
         }
     } catch (error) {
-        // Ошибка сети или CORS
-        console.error('Ошибка сети / CORS:', error);
         alert('Не удалось связаться с CRM. Ошибка: ' + error.message);
     }
 }
