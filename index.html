@@ -1992,8 +1992,7 @@
 
     let cart = [];
 
-   function getPackMultiplier(item) {
-        // Оставляем на случай, если где-то еще нужен множитель, но в ценах больше не используем
+  function getPackMultiplier(item) {
         const combined = (item.pack + " " + item.name).toLowerCase();
         const match = combined.match(/(\d+)\s*(пар|шт)/);
         if (match) return parseInt(match[1]);
@@ -2023,6 +2022,16 @@
         return item.priceUpTo30k || 0;
     }
 
+    function getCartTier(currentCart) {
+        let baseSum = 0;
+        currentCart.forEach(x => {
+            baseSum += getPackBasePrice(x) * x.qty;
+        });
+        if (baseSum > 60000) return 3;
+        if (baseSum >= 30000) return 2;
+        return 1;
+    }
+
     function calculateCartSum(currentCart) {
         let tier = getCartTier(currentCart);
         let finalSum = 0;
@@ -2035,17 +2044,20 @@
     function init() {
         let cats = [...new Set(products.map(p => p.category))];
         let sel = document.getElementById('catSelect');
-        cats.forEach(c => {
-            let opt = document.createElement('option');
-            opt.value = c; 
-            opt.textContent = c;
-            sel.appendChild(opt);
-        });
+        if (sel) {
+            cats.forEach(c => {
+                let opt = document.createElement('option');
+                opt.value = c; 
+                opt.textContent = c;
+                sel.appendChild(opt);
+            });
+        }
         render(products);
     }
 
     function render(list) {
         let tbody = document.getElementById('tbody');
+        if (!tbody) return;
         tbody.innerHTML = '';
         let currentCat = '';
         
@@ -2115,30 +2127,34 @@
         let tierInfoEl = document.getElementById('tierInfo');
         
         let totalCount = cart.reduce((s, x) => s + x.qty, 0);
-        countHeader.textContent = totalCount;
+        if (countHeader) countHeader.textContent = totalCount;
         
         // Обновление плавающей панели на мобильных
-        document.getElementById('floatCount').textContent = totalCount;
+        let floatCount = document.getElementById('floatCount');
+        if (floatCount) floatCount.textContent = totalCount;
         
         if (cart.length === 0) {
-            list.innerHTML = '<div style="color: #888; font-size: 13px; text-align: center; padding: 15px 0;">Корзина пуста</div>';
-            totalEl.textContent = '0 руб.';
-            document.getElementById('floatTotal').textContent = '0 руб.';
-            tierInfoEl.textContent = 'Базовая цена (до 30 тыс. руб.)';
+            if (list) list.innerHTML = '<div style="color: #888; font-size: 13px; text-align: center; padding: 15px 0;">Корзина пуста</div>';
+            if (totalEl) totalEl.textContent = '0 руб.';
+            let floatTotal = document.getElementById('floatTotal');
+            if (floatTotal) floatTotal.textContent = '0 руб.';
+            if (tierInfoEl) tierInfoEl.textContent = 'Базовая цена (до 30 тыс. руб.)';
             return;
         }
 
         let calc = calculateCartSum(cart);
         
-        if (calc.tier === 3) {
-            tierInfoEl.textContent = '🔥 Скидка >60 000 ₽ активна';
-        } else if (calc.tier === 2) {
-            tierInfoEl.textContent = '⚡ Скидка 30–60 000 ₽ активна';
-        } else {
-            tierInfoEl.textContent = '💡 Базовая цена. Добавьте товаров до 30 000 ₽ для скидки!';
+        if (tierInfoEl) {
+            if (calc.tier === 3) {
+                tierInfoEl.textContent = '🔥 Скидка >60 000 ₽ активна';
+            } else if (calc.tier === 2) {
+                tierInfoEl.textContent = '⚡ Скидка 30–60 000 ₽ активна';
+            } else {
+                tierInfoEl.textContent = '💡 Базовая цена. Добавьте товаров до 30 000 ₽ для скидки!';
+            }
         }
 
-        list.innerHTML = '';
+        if (list) list.innerHTML = '';
         cart.forEach((x, i) => {
             let packPrice = getPackPriceForTier(x, calc.tier);
             let div = document.createElement('div');
@@ -2151,16 +2167,18 @@
                     <button type="button" onclick="changeQty(${i}, 1)">+</button>
                 </div>
             `;
-            list.appendChild(div);
+            if (list) list.appendChild(div);
         });
-        totalEl.textContent = calc.sum.toLocaleString() + ' руб.';
-        document.getElementById('floatTotal').textContent = calc.sum.toLocaleString() + ' руб.';
+        
+        if (totalEl) totalEl.textContent = calc.sum.toLocaleString() + ' руб.';
+        let floatTotal = document.getElementById('floatTotal');
+        if (floatTotal) floatTotal.textContent = calc.sum.toLocaleString() + ' руб.';
     }
 
     function scrollToOrder() {
-        document.getElementById('orderSection').scrollIntoView({ behavior: 'smooth' });
+        let orderSection = document.getElementById('orderSection');
+        if (orderSection) orderSection.scrollIntoView({ behavior: 'smooth' });
     }
-
     async function sendOrder(event) {
         event.preventDefault();
         if (cart.length === 0) { 
