@@ -2001,10 +2001,10 @@
         return 1;
     }
 
-    function isSutureMaterial(item) {
-        const cat = item.category.toLowerCase();
-        return cat.includes('полигликолид') || cat.includes('пга') || cat.includes('полипропилен');
-    }
+   function isSutureMaterial(item) {
+    // Автоматически определяет товар по наличию пороговых цен «Трилайф»
+    return item.price30to60k !== undefined || item.priceOver60k !== undefined;
+}
 
     function getPackPriceForTier(item, tier) {
         const mult = getPackMultiplier(item);
