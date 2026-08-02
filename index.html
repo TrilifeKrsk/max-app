@@ -1,14 +1,14 @@
-<!DOCTYPE html>
-<meta charset="UTF-8">
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ТРИЛАЙФ — Заказ продукции</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* 1. Объединяем системные цвета Telegram и ваши брендовые цвета */
         :root {
             --bg-color: var(--tg-theme-bg-color, #F4F7F5);
             --text-color: var(--tg-theme-text-color, #2C3E35);
-            --hint-color: var(--tg-theme-hint-color, #999999);
+            --hint-color: var(--tg-theme-hint-color, #777777);
             --secondary-bg: var(--tg-theme-secondary-bg-color, #ffffff);
             
             --primary: #2C5E43;
@@ -27,80 +27,152 @@
         body { 
             background-color: var(--bg-color); 
             color: var(--text-color); 
-            padding: 12px; 
-            padding-bottom: 90px; /* Отступ под нативную кнопку Telegram */
+            padding: 10px; 
+            padding-bottom: 90px; /* Запас под нативную кнопку Telegram */
         }
 
+        /* Шапка */
         header { 
             background: var(--secondary-bg); 
-            padding: 12px 16px; 
+            padding: 12px; 
             border-radius: 12px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
-            margin-bottom: 16px; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04); 
+            margin-bottom: 12px; 
         }
 
-        .logo-area { display: flex; align-items: center; gap: 10px; }
-        .logo-svg { width: 32px; height: 32px; fill: none; stroke: var(--primary); stroke-width: 6; stroke-linejoin: round; }
-        .logo-title { font-size: 18px; font-weight: bold; color: var(--primary); letter-spacing: 0.5px; }
-        .logo-sub { font-size: 10px; color: var(--hint-color); }
-        .cart-indicator { font-size: 13px; font-weight: bold; color: var(--primary); background: var(--bg-color); padding: 6px 12px; border-radius: 6px; }
+        .logo-area { display: flex; align-items: center; gap: 8px; }
+        .logo-title { font-size: 16px; font-weight: bold; color: var(--primary); }
+        .cart-indicator { font-size: 12px; font-weight: bold; color: var(--primary); background: var(--bg-color); padding: 6px 10px; border-radius: 6px; }
 
-        /* 2. Адаптивная рабочая зона: на телефоне элементы идут друг за другом в 1 колонку */
+        /* Основной контейнер — одна колонка сверху вниз */
         .workspace { 
             display: flex; 
             flex-direction: column; 
-            gap: 16px; 
+            gap: 12px; 
         }
 
-        /* Предотвращаем поломку верстки длинными названиями товаров */
-        .product-card {
+        .card { 
+            background: var(--secondary-bg); 
+            padding: 14px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04); 
+        }
+
+        /* Поиск и фильтры */
+        .controls { 
+            display: flex; 
+            gap: 8px; 
+            margin-bottom: 12px; 
+        }
+
+        input, select { 
+            padding: 10px; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            font-size: 14px; 
+            width: 100%; 
+            outline: none; 
             background: var(--secondary-bg);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 12px;
-            word-break: break-word;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+            color: var(--text-color);
         }
-        @media (max-width: 900px) {
-            .workspace { grid-template-columns: 1fr; }
-        }
-
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .card:last-child { margin-bottom: 0; }
-
-        .controls { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        input, select { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; width: 100%; outline: none; }
         input:focus, select:focus { border-color: var(--primary); }
-        input[type="text"] { flex: 1; }
 
-        .table-wrap { max-height: 550px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
-        th { background: var(--primary); color: white; position: sticky; top: 0; z-index: 2; font-weight: 600; }
-        .cat-row { background: #E6EFEA !important; font-weight: bold; color: var(--primary-dark); }
-        tr:hover { background: #F9FAFB; }
-        .btn-add { background: var(--accent); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; transition: background 0.2s; }
-        .btn-add:hover { background: var(--primary-dark); }
+        /* Карточка товара вместо неудобной таблицы */
+        .product-card {
+            background: var(--bg-color);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            word-break: break-word;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-        .sidebar { position: sticky; top: 15px; }
+        .product-title {
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--text-color);
+        }
 
-        .cart-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px; gap: 10px; }
-        .cart-controls { display: flex; gap: 6px; align-items: center; }
-        .cart-controls button { width: 26px; height: 26px; background: #E6EFEA; color: var(--primary-dark); border: none; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; }
-        .cart-controls button:hover { background: var(--border); }
+        .product-meta {
+            font-size: 11px;
+            color: var(--hint-color);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .product-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .product-price {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+
+        .btn-add { 
+            background: var(--accent); 
+            color: white; 
+            border: none; 
+            padding: 8px 14px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 12px; 
+        }
+
+        /* Блок корзины */
+        .cart-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 12px; 
+            margin-bottom: 8px; 
+            border-bottom: 1px solid var(--border); 
+            padding-bottom: 6px; 
+            gap: 8px; 
+        }
+        .cart-controls { display: flex; gap: 4px; align-items: center; }
+        .cart-controls button { width: 24px; height: 24px; background: var(--border); color: var(--text-color); border: none; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 13px; }
         
-        .total { font-size: 16px; font-weight: bold; display: flex; justify-content: space-between; margin-top: 15px; border-top: 2px solid var(--border); padding-top: 12px; color: var(--primary-dark); }
-        .tier-info { font-size: 12px; color: #444; background: #e8f4ec; padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center; font-weight: 500; line-height: 1.4; }
+        .total { 
+            font-size: 15px; 
+            font-weight: bold; 
+            display: flex; 
+            justify-content: space-between; 
+            margin-top: 12px; 
+            border-top: 2px solid var(--border); 
+            padding-top: 10px; 
+            color: var(--primary-dark); 
+        }
+
+        .tier-info { 
+            font-size: 11px; 
+            color: var(--text-color); 
+            background: var(--bg-color); 
+            padding: 8px; 
+            border-radius: 6px; 
+            margin-bottom: 10px; 
+            text-align: center; 
+            font-weight: 500; 
+            line-height: 1.3; 
+            border: 1px solid var(--border);
+        }
         
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #444; }
-        .btn-submit { background: #27AE60; color: white; border: none; width: 100%; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 10px; transition: background 0.2s; }
-        .btn-submit:hover { background: #219653; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 3px; color: var(--hint-color); }
         
-        h3 { font-size: 16px; color: var(--primary-dark); margin-bottom: 12px; }
+        h3 { font-size: 15px; color: var(--primary-dark); margin-bottom: 10px; }
     </style>
 </head>
 <body>
