@@ -2038,6 +2038,189 @@
         }
 
         window.onload = init;
+        function render(list) {
+            let tbody = document.getElementById('tbody');
+            tbody.innerHTML = '';
+            
+            let currentCat = '';
+            list.forEach((p, index) => {
+                if (p.category !== currentCat) {
+                    currentCat = p.category;
+                    let catRow = document.createElement('tr');
+                    catRow.innerHTML = `<td colspan="6" class="cat-row">${currentCat}</td>`;
+                    tbody.appendChild(catRow);
+                }
+
+                let tr = document.createElement('tr');
+                let p30 = p.priceUpTo30k ? p.priceUpTo30k + ' руб.' : '-';
+                let p30_60 = p.price30to60k ? p.price30to60k + ' руб.' : '-';
+                let p60 = p.priceOver60k ? p.priceOver60k + ' руб.' : '-';
+
+                tr.innerHTML = `
+                    <td><b>${p.name}</b><br><small style="color:#666">Производитель: ${p.maker}</small></td>
+                    <td>${p.pack}</td>
+                    <td>${p30}</td>
+                    <td>${p30_60}</td>
+                    <td>${p60}</td>
+                    <td><button class="btn-add" onclick="addToCart(${products.indexOf(p)})">В корзину</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            updateCartUI();
+        }
+
+        function filterTable() {
+            let query = document.getElementById('searchIn').value.toLowerCase();
+            let cat = document.getElementById('catSelect').value;
+            
+            let filtered = products.filter(p => {
+                let matchCat = (cat === 'all' || p.category === cat);
+                let matchQuery = p.name.toLowerCase().includes(query) || p.maker.toLowerCase().includes(query);
+                return matchCat && matchQuery;
+            });
+            render(filtered);
+        }
+
+        function addToCart(index) {
+            let item = products[index];
+            let found = cart.find(x => x.item === item);
+            if (found) {
+                found.qty++;
+            } else {
+                cart.push({ item: item, qty: 1 });
+            }
+            updateCartUI();
+        }
+
+        function changeQty(index, delta) {
+            cart[index].qty += delta;
+            if (cart[index].qty <= 0) {
+                cart.splice(index, 1);
+            }
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            let cartList = document.getElementById('cartList');
+            let cartCount = document.getElementById('cartCount');
+            let cartTotal = document.getElementById('cartTotal');
+            let tierInfo = document.getElementById('tierInfo');
+
+            cartList.innerHTML = '';
+            if (cart.length === 0) {
+                cartList.innerHTML = '<div style="color: #888; font-size: 13px; text-align: center; padding: 15px 0;">Корзина пуста</div>';
+                cartCount.textContent = '0';
+                cartTotal.textContent = '0 руб.';
+                tierInfo.textContent = 'Базовая цена (до 30 тыс. руб.)';
+                return;
+            }
+
+            let totalCount = 0;
+            let currentCartFormatted = cart.map(c => ({ ...c.item, qty: c.qty }));
+            let calculation = calculateCartSum(currentCartFormatted);
+            let tier = calculation.tier;
+
+            if (tier === 3) {
+                tierInfo.textContent = '🔥 Скидка ОПТ (> 60 тыс. руб.)';
+            } else if (tier === 2) {
+                tierInfo.textContent = '✨ Скидка ОПТ (30 - 60 тыс. руб.)';
+            } else {
+                tierInfo.textContent = 'Базовая цена (до 30 тыс. руб.). Добавьте еще на ' + Math.max(0, 30000 - calculation.sum) + ' руб. для скидки.';
+            }
+
+            cart.forEach((c, idx) => {
+                totalCount += c.qty;
+                let itemPrice = getPackPriceForTier(c.item, tier);
+                let row = document.createElement('div');
+                row.className = 'cart-item';
+                row.innerHTML = `
+                    <div style="flex: 1;">${c.item.name}</div>
+                    <div class="cart-controls">
+                        <button type="button" onclick="changeQty(${idx}, -1)">-</button>
+                        <span>${c.qty}</span>
+                        <button type="button" onclick="changeQty(${idx}, 1)">+</button>
+                    </div>
+                    <div style="font-weight: bold; min-width: 70px; text-align: right;">${itemPrice * c.qty} р.</div>
+                `;
+                cartList.appendChild(row);
+            });
+
+            cartCount.textContent = totalCount;
+            cartTotal.textContent = calculation.sum.toLocaleString() + ' руб.';
+        }
+
+        // Функция отправки заказа через вебхук в Битрикс24
+        async function sendOrder(event) {
+            event.preventDefault();
+
+            if (cart.length === 0) {
+                alert('Корзина пуста!');
+                return;
+            }
+
+            let name = document.getElementById('cName').value;
+            let phone = document.getElementById('cPhone').value;
+            let org = document.getElementById('cOrg').value;
+
+            let currentCartFormatted = cart.map(c => ({ ...c.item, qty: c.qty }));
+            let calculation = calculateCartSum(currentCartFormatted);
+
+            // Формируем текст комментария с составом заказа
+            let productsDetails = cart.map(c => {
+                let price = getPackPriceForTier(c.item, calculation.tier);
+                return `- ${c.item.name} (Кол-во упаковок: ${c.qty}, Цена за уп: ${price} руб.)`;
+            }).join('\n');
+
+            let comment = `Заказ из Telegram Mini App (ТРИЛАЙФ):\n\n` +
+                          `Организация: ${org}\n` +
+                          `Имя: ${name}\n` +
+                          `Телефон: ${phone}\n` +
+                          `Сумма заказа: ${calculation.sum} руб. (Ценовая колонка: тир ${calculation.tier})\n\n` +
+                          `Состав заказа:\n${productsDetails}`;
+
+            // Параметры для создания лида в Битрикс24 через вебхук
+            let webhookUrl = 'https://b24-5qamxl.bitrix24.ru/rest/12/w655fv23viloze7i/crm.lead.add.json';
+            
+            let leadData = {
+                fields: {
+                    TITLE: `Заказ от ${org} (${name})`,
+                    NAME: name,
+                    PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
+                    COMPANY_TITLE: org,
+                    COMMENTS: comment,
+                    SOURCE_ID: 'WEB'
+                }
+            };
+
+            try {
+                let response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(leadData)
+                });
+
+                let result = await response.json();
+
+                if (result.result) {
+                    alert('Спасибо! Ваш заказ успешно оформлен и отправлен в CRM.');
+                    cart = [];
+                    updateCartUI();
+                    document.getElementById('cName').value = '';
+                    document.getElementById('cPhone').value = '';
+                    document.getElementById('cOrg').value = '';
+                } else {
+                    alert('Ошибка при отправке заказа: ' + (result.error_description || 'Неизвестная ошибка'));
+                }
+            } catch (error) {
+                console.error('Ошибка сети:', error);
+                alert('Произошла ошибка сети при отправке заказа.');
+            }
+        }
+
+        // Инициализация при загрузке страницы
+        init();
     </script>
 </body>
 </html>
