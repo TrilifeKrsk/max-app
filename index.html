@@ -1998,7 +1998,7 @@ let cart = [];
    async function sendOrder(event) {
     event.preventDefault();
     if (cart.length === 0) { 
-        alert('Корзина праста!'); 
+        alert('Корзина пуста!'); 
         return; 
     }
     
@@ -2009,14 +2009,32 @@ let cart = [];
 
     let baseUrl = 'https://b24-5qamxl.bitrix24.ru/rest/12/w655fv23viloze7i';
     
-    // 1. Создаем лид
+    // 1. Формируем текст комментария для подстраховки и детального просмотра
+    let productsDetails = cart.map((c, index) => {
+        let price = getPackPriceForTier(c, calc.tier);
+        let itemTotal = price * c.qty;
+        return `${index + 1}. ${c.name}\n   • Количество: ${c.qty} уп.\n   • Цена за уп.: ${price} руб.\n   • Сумма: ${itemTotal} руб.`;
+    }).join('\n\n');
+
+    let comment = `📥 НОВЫЙ ЗАКАЗ ИЗ TELEGRAM MINI APP\n\n` +
+                  `👤 Данные клиента:\n` +
+                  `• Организация: ${org || 'Не указана'}\n` +
+                  `• Имя: ${name}\n` +
+                  `• Телефон: ${phone}\n` +
+                  `• Тип цен: ${calc.tier}\n\n` +
+                  `🛒 СОСТАВ ЗАКАЗА:\n${productsDetails}\n\n` +
+                  `💰 ИТОГО К ОПЛАТЕ: ${calc.sum.toLocaleString()} руб.`;
+
+    // 2. Создаем лид
     let leadData = {
         fields: {
-            TITLE: `Заказ от ${org ? org : name}`,
+            TITLE: `Заказ от ${org ? org : name} — ${calc.sum.toLocaleString()} руб.`,
             NAME: name,
             PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
             OPPORTUNITY: Number(calc.sum),
             CURRENCY_ID: 'RUB',
+            IS_MANUAL_OPPORTUNITY: 'Y',
+            COMMENTS: comment,
             SOURCE_ID: 'WEB'
         }
     };
@@ -2033,17 +2051,18 @@ let cart = [];
         if (result.result) {
             let leadId = result.result; // ID созданного лида
 
-            // 2. Формируем товарные строки для штатного блока Битрикса
+            // 3. Формируем массив товаров для штатного блока Битрикса
             let rows = cart.map(c => {
                 let price = getPackPriceForTier(c, calc.tier);
                 return {
-                    PRODUCT_NAME: `${c.name} (${c.qty} уп.)`,
+                    PRODUCT_ID: 0, // Указываем 0 для свободных позиций не из каталога
+                    PRODUCT_NAME: c.name,
                     PRICE: Number(price),
                     QUANTITY: Number(c.qty)
                 };
             });
 
-            // 3. Отправляем товары через метод добавления строк
+            // 4. Отправляем товарные позиции в лид
             await fetch(`${baseUrl}/crm.lead.productrows.set.json`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
