@@ -2005,39 +2005,25 @@ let cart = [];
     let name = document.getElementById('cName').value;
     let phone = document.getElementById('cPhone').value;
     let org = document.getElementById('cOrg').value;
-    let calc = calculateCartSum(cart); // Считает общую сумму
+    let calc = calculateCartSum(cart);
 
-    // Формируем красивый и понятный список позиций для комментария
-    let productsDetails = cart.map((c, index) => {
-        let price = getPackPriceForTier(c, calc.tier);
-        let itemTotal = price * c.qty;
-        return `${index + 1}. ${c.name}\n   Количество: ${c.qty} уп. | Цена: ${price} руб. | Сумма: ${itemTotal} руб.`;
-    }).join('\n\n');
-
-    let comment = `📥 Заказ из Telegram Mini App (ТРИЛАЙФ)\n\n` +
-                  `👤 Контакты:\n` +
-                  `• Организация: ${org || 'Не указана'}\n` +
-                  `• Имя: ${name}\n` +
-                  `• Телефон: ${phone}\n\n` +
-                  `🛒 Состав заказа:\n${productsDetails}\n\n` +
-                  `💰 Итоговая сумма: ${calc.sum.toLocaleString()} руб. (Тип цены: ${calc.tier})`;
-
-    let webhookUrl = 'https://b24-5qamxl.bitrix24.ru/rest/12/w655fv23viloze7i/crm.lead.add.json';
+    let baseUrl = 'https://b24-5qamxl.bitrix24.ru/rest/12/w655fv23viloze7i';
     
+    // 1. Создаем лид с фиксированной суммой
     let leadData = {
         fields: {
-            TITLE: `Заказ от ${org ? org : name} (${calc.sum.toLocaleString()} руб.)`,
+            TITLE: `Заказ от ${org ? org : name}`,
             NAME: name,
             PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
-            OPPORTUNITY: calc.sum, // Сумма лида в поле Битрикса
+            OPPORTUNITY: calc.sum,
             CURRENCY_ID: 'RUB',
-            COMMENTS: comment,     // Полный состав заказа с позициями и ценами
+            IS_MANUAL_OPPORTUNITY: 'Y', // <--- ЭТОТ ФЛАГ ЗАЩИЩАЕТ СУММУ ОТ СБРОСА В 0
             SOURCE_ID: 'WEB'
         }
     };
 
     try {
-        let response = await fetch(webhookUrl, {
+        let response = await fetch(`${baseUrl}/crm.lead.add.json`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(leadData)
@@ -2046,6 +2032,28 @@ let cart = [];
         let result = await response.json();
 
         if (result.result) {
+            let leadId = result.result; // Получаем ID созданного лида
+
+            // 2. Формируем товарные позиции для штатного блока «Товары»
+            let rows = cart.map(c => {
+                let price = getPackPriceForTier(c, calc.tier);
+                return {
+                    PRODUCT_NAME: `${c.name} (${c.qty} уп.)`, // Название товара
+                    PRICE: price,                             // Цена за единицу/упаковку
+                    QUANTITY: c.qty                           // Количество упаковок
+                };
+            });
+
+            // 3. Отправляем товары в созданный лид
+            await fetch(`${baseUrl}/crm.lead.productrows.set.json`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: leadId,
+                    rows: rows
+                })
+            });
+
             alert(`Спасибо! Заказ на сумму ${calc.sum.toLocaleString()} руб. успешно создан!`);
             cart = [];
             updateCartUI();
@@ -2062,7 +2070,6 @@ let cart = [];
         alert('Не удалось связаться с CRM. Ошибка: ' + error.message);
     }
 }
-
     window.onload = init;
     </script>
 </body>
