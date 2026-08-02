@@ -3,731 +3,2041 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ООО "ТРИЛАЙФ" — Каталог и Прайс-лист</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com
-"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
- rel="stylesheet">
-</head>
-<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col">
+    <title>ТРИЛАЙФ — Заказ продукции</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --primary: #2C5E43;
+            --primary-dark: #1E3F2E;
+            --accent: #3B7A57;
+            --bg: #F4F7F5;
+            --text: #2C3E35;
+            --border: #D2DCD5;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 15px; }
 
-    <!-- Хедер с контактами -->
-    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        header { 
+            background: white; 
+            padding: 12px 20px; 
+            border-radius: 8px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+            margin-bottom: 20px; 
+        }
+        .logo-area { display: flex; align-items: center; gap: 12px; }
+        .logo-svg { width: 36px; height: 36px; fill: none; stroke: var(--primary); stroke-width: 6; stroke-linejoin: round; }
+        .logo-title { font-size: 20px; font-weight: bold; color: var(--primary); letter-spacing: 0.5px; }
+        .logo-sub { font-size: 11px; color: #666; }
+        .cart-indicator { font-size: 14px; font-weight: bold; color: var(--primary); background: #E6EFEA; padding: 8px 14px; border-radius: 6px; }
+
+        .workspace { 
+            display: grid; 
+            grid-template-columns: 1fr 380px; 
+            gap: 20px; 
+            align-items: start; 
+        }
+
+        @media (max-width: 900px) {
+            .workspace { grid-template-columns: 1fr; }
+        }
+
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card:last-child { margin-bottom: 0; }
+
+        .controls { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        input, select { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; width: 100%; outline: none; }
+        input:focus, select:focus { border-color: var(--primary); }
+        input[type="text"] { flex: 1; }
+
+        .table-wrap { max-height: 550px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+        th { background: var(--primary); color: white; position: sticky; top: 0; z-index: 2; font-weight: 600; }
+        .cat-row { background: #E6EFEA !important; font-weight: bold; color: var(--primary-dark); }
+        tr:hover { background: #F9FAFB; }
+        .btn-add { background: var(--accent); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; transition: background 0.2s; }
+        .btn-add:hover { background: var(--primary-dark); }
+
+        .sidebar { position: sticky; top: 15px; }
+
+        .cart-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px; gap: 10px; }
+        .cart-controls { display: flex; gap: 6px; align-items: center; }
+        .cart-controls button { width: 26px; height: 26px; background: #E6EFEA; color: var(--primary-dark); border: none; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; }
+        .cart-controls button:hover { background: var(--border); }
+        
+        .total { font-size: 16px; font-weight: bold; display: flex; justify-content: space-between; margin-top: 15px; border-top: 2px solid var(--border); padding-top: 12px; color: var(--primary-dark); }
+        .tier-info { font-size: 12px; color: #444; background: #e8f4ec; padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center; font-weight: 500; line-height: 1.4; }
+        
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #444; }
+        .btn-submit { background: #27AE60; color: white; border: none; width: 100%; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 10px; transition: background 0.2s; }
+        .btn-submit:hover { background: #219653; }
+        
+        h3 { font-size: 16px; color: var(--primary-dark); margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <svg class="logo-svg" viewBox="0 0 100 100"><polygon points="50,15 90,85 10,85"/></svg>
             <div>
-                <h1 class="text-2xl font-bold tracking-tight text-blue-400">ООО «ТРИЛАЙФ»</h1>
-                <p class="text-xs text-gray-300">Медицинские расходные материалы и оборудование</p>
+                <div class="logo-title">ТРИЛАЙФ</div>
+                <div class="logo-sub">Каталог медицинской продукции • Полный прайс-лист</div>
+                <div class="logo-sub">На этой странице Вы можете сделать заказ без участия менеджеров! </div>
+                <div class="logo-sub">Эта страница находится в тестовом режиме! </div>
             </div>
-            
-            <div class="flex flex-wrap gap-4 text-xs md:text-sm text-gray-300">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-phone text-blue-400"></i>
-                    <span>+7 (905) 087-12-00 | +7 (905) 087-00-11</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-envelope text-blue-400"></i>
-                    <span>krsk3life@yandex.ru</span>
-                </div>
-            </div>
+        </div>
+        <div class="cart-indicator">
+            🛒 Упаковок в заказе: <span id="cartCount">0</span>
         </div>
     </header>
 
-    <!-- Основной контент -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
-        
-        <!-- Фильтры и Поиск -->
-        <div class="bg-white p-6 rounded-xl shadow-sm mb-6 border border-gray-200">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                
-                <!-- Поиск -->
-                <div class="md:col-span-2 relative">
-                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Поиск по наименованию</label>
-                    <div class="relative">
-                        <input type="text" id="searchInput" placeholder="Введите название товара (напр. Кетгут, Викрил, Перчатки)..." 
-                               class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                        <i class="fas fa-search absolute left-3.5 top-3.5 text-gray-400"></i>
-                    </div>
-                </div>
-
-                <!-- Фильтр по категориям -->
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Категория</label>
-                    <select id="categorySelect" class="w-full py-2.5 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                        <option value="">Все категории</option>
-                    </select>
-                </div>
-
+    <div class="workspace">
+        <div class="card">
+            <div class="controls">
+                <input type="text" id="searchIn" placeholder="Поиск по названию или производителю..." oninput="filterTable()">
+                <select id="catSelect" onchange="filterTable()" style="max-width: 260px;">
+                    <option value="all">Все категории</option>
+                </select>
             </div>
-
-            <!-- Статистика -->
-            <div class="mt-4 flex justify-between items-center text-xs text-gray-500 border-t pt-3">
-                <span>Найдено позиций: <strong id="itemCount" class="text-blue-600 font-bold">0</strong></span>
-                <span class="hidden sm:inline">Прайс-лист актуален на 07.2026 г.</span>
-            </div>
-        </div>
-
-        <!-- Таблица товаров -->
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+            <div class="table-wrap">
+                <table>
                     <thead>
-                        <tr class="bg-slate-800 text-white text-xs uppercase tracking-wider">
-                            <th class="py-3 px-4 font-semibold">№</th>
-                            <th class="py-3 px-4 font-semibold">Наименование товара</th>
-                            <th class="py-3 px-4 font-semibold">Фасовка / Уп.</th>
-                            <th class="py-3 px-4 font-semibold">Производитель</th>
-                            <th class="py-3 px-4 font-semibold text-right">Цена</th>
+                        <tr>
+                            <th>Наименование</th>
+                            <th>Упаковка</th>
+                            <th>Цена уп. (<30т)</th>
+                            <th>Цена уп. (30-60т)</th>
+                            <th>Цена уп. (>60т)</th>
+                            <th>Действие</th>
                         </tr>
                     </thead>
-                    <tbody id="productTableBody" class="divide-y divide-gray-200 text-sm">
-                        <!-- Данные загружаются через JS -->
-                    </tbody>
+                    <tbody id="tbody"></tbody>
                 </table>
             </div>
-            
-            <div id="noResults" class="hidden p-8 text-center text-gray-500">
-                <i class="fas fa-box-open text-4xl mb-2 text-gray-300"></i>
-                <p>Ничего не найдено по вашему запросу.</p>
+        </div>
+
+        <div class="sidebar">
+            <div class="card">
+                <h3>Ваш заказ</h3>
+                <div id="tierInfo" class="tier-info">Базовая цена (до 30 тыс. руб.)</div>
+                <div id="cartList" style="max-height: 220px; overflow-y: auto; margin-bottom: 10px; padding-right: 4px;">
+                    <div style="color: #888; font-size: 13px; text-align: center; padding: 15px 0;">Корзина пуста</div>
+                </div>
+                <div class="total">
+                    <span>Итого:</span>
+                    <span id="cartTotal">0 руб.</span>
+                </div>
+            </div>
+
+            <div class="card" id="checkoutBox">
+                <h3>Оформление заказа</h3>
+                <form onsubmit="sendOrder(event)">
+                    <div class="form-group">
+                        <label>Ваше имя *</label>
+                        <input type="text" id="cName" required placeholder="Ваше имя">
+                    </div>
+                    <div class="form-group">
+                        <label>Телефон *</label>
+                        <input type="tel" id="cPhone" required placeholder="+7 (___) ___-__-__">
+                    </div>
+                    <div class="form-group">
+                        <label>Организация *</label>
+                        <input type="text" id="cOrg" required placeholder="Название Вашей огранизации">
+                    </div>
+                    <button type="submit" class="btn-submit">Подтвердить заказ</button>
+                </form>
             </div>
         </div>
+    </div>
 
-    </main>
-
-    <!-- Футер -->
-    <footer class="bg-slate-900 text-gray-400 text-xs py-6 mt-12 border-t border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
-            <p>© 2026 ООО «ТРИЛАЙФ». Все права защищены.</p>
-            <p>Email: manager3life@yandex.ru | krsk3life@yandex.ru</p>
-        </div>
-    </footer>
-
-    <!-- Скрипт с данными и логикой -->
     <script>
-        // База данных товаров из прайса ООО "ТРИЛАЙФ"
+        let isTelegram = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData;
+        let tg = isTelegram ? window.Telegram.WebApp : null;
+        if (tg) tg.expand();
+
         const products = [
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 6/0(МР0,7) 75 см",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 5/0(МР1) 75 см с колющей иглой 15мм",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 4/0(МР1.5) 75 см с колющей иглой 20мм",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 3/0(МР2) 75 см с колющей иглой 20мм",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 3/0(МР2) 75 см с колющей иглой 25мм",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 2/0(МР3) 75 см с колющей иглой 25мм",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 2/0(МР3) 75 см с колющей иглой 30мм",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 0(МР3.5) 75 см с колющей иглой 30мм",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 0(МР3.5) 75 см с колющей иглой 35мм",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 1(МР4) 75 см с колющей иглой 30мм",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 1(МР4) 75 см с колющей иглой 35мм",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 1(МР4) 75 см с колющей иглой 40мм",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 2(МР5) 75 см с колющей иглой 40мм",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 3/0(МР2) 75 см с режущей иглой 20мм",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 2/0(МР3) 75 см с режущей иглой 25мм",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
-            "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 0(МР3.5) 75 см с режущей иглой 30мм",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полипропилен (Монофил)",
-            "name": "Полипропилен USP 6/0 (MP0.7) 75см с 2мя колючими иглами 13мм 3/8",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полипропилен (Монофил)",
-            "name": "Полипропилен USP 5/0 (MP1) 75см с 2мя колючими иглами 13мм 3/8",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полипропилен (Монофил)",
-            "name": "Полипропилен USP 4/0 (MP1,5) 75см с колющей иглой 20мм 1/2",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полипропилен (Монофил)",
-            "name": "Полипропилен USP 3/0 (MP2) 75см с колющей иглой 20мм 1/2","qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полипропилен (Монофил)",
-            "name": "Полипропилен USP 2/0 (MP3) 75см с колющей иглой 25мм 1/2",
-            "qty": "20",
-            "price": "4660 ₽ (до 30 т.р) / 4260 ₽ (30-60 т.р) / 3880 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полидиаксанон (Моносорб) аналог ПДС",
-            "name": "Полидиоксанон USP 4/0 (MP1.5) 75 см с колющей иглой 20 мм 1/2",
-            "qty": "20",
-            "price": "5200 ₽ (до 30 т.р) / 4800 ₽ (30-60 т.р) / 4400 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полидиаксанон (Моносорб) аналог ПДС",
-            "name": "Полидиоксанон USP 3/0 (MP2) 75 см с колющей иглой 20 мм 1/2",
-            "qty": "20",
-            "price": "5200 ₽ (до 30 т.р) / 4800 ₽ (30-60 т.р) / 4400 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полидиаксанон (Моносорб) аналог ПДС",
-            "name": "Полидиоксанон USP 2/0 (MP3) 75 см с колющей иглой 25 мм 1/2",
-            "qty": "20",
-            "price": "5200 ₽ (до 30 т.р) / 4800 ₽ (30-60 т.р) / 4400 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полидиаксанон (Моносорб) аналог ПДС",
-            "name": "Полидиоксанон USP 0 (MP3.5) 75 см с колющей иглой 30 мм 1/2",
-            "qty": "20",
-            "price": "5200 ₽ (до 30 т.р) / 4800 ₽ (30-60 т.р) / 4400 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полидиаксанон (Моносорб) аналог ПДС",
-            "name": "Полидиоксанон USP 1 (MP4) 75 см с колющей иглой 35 мм 1/2",
-            "qty": "20",
-            "price": "5200 ₽ (до 30 т.р) / 4800 ₽ (30-60 т.р) / 4400 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид-КО-ЛАКТИД (Викрил)",
-            "name": "ПОЛИГЛИКОЛИД-КО-ЛАКТИД неокрашенный USP 5/0(МР1) 75 см с колющей иглой 15мм 1/2",
-            "qty": "20",
-            "price": "5120 ₽ (до 30 т.р) / 4720 ₽ (30-60 т.р) / 4300 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид-КО-ЛАКТИД (Викрил)",
-            "name": "ПОЛИГЛИКОЛИД-КО-ЛАКТИД неокрашенный USP 4/0(МР1.5) 75 см с колющей иглой 20мм 1/2",
-            "qty": "20",
-            "price": "5120 ₽ (до 30 т.р) / 4720 ₽ (30-60 т.р) / 4300 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид-КО-ЛАКТИД (Викрил)",
-            "name": "ПОЛИГЛИКОЛИД-КО-ЛАКТИД плетеный фиолетовый USP 4/0(МР1.5) 75 см с колющей иглой 20мм 1/2",
-            "qty": "20",
-            "price": "5120 ₽ (до 30 т.р) / 4720 ₽ (30-60 т.р) / 4300 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Полигликолид-КО-ЛАКТИД (Викрил)",
-            "name": "ПОЛИГЛИКОЛИД-КО-ЛАКТИД плетеный фиолетовый USP 3/0(МР2) 75 см с колющей иглой 20мм 1/2",
-            "qty": "20",
-            "price": "5120 ₽ (до 30 т.р) / 4720 ₽ (30-60 т.р) / 4300 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Кетгут с колющей иглой (игла 1/2)",
-            "name": "Кетгут простой USP 4/0(МР2) 75 см с колющей иглой 20 мм",
-            "qty": "20",
-            "price": "3400 ₽ (до 30 т.р) / 3000 ₽ (30-60 т.р) / 2800 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Кетгут с колющей иглой (игла 1/2)",
-            "name": "Кетгут простой USP 3/0(МР3) 75 см с колющей иглой 20 мм",
-            "qty": "20",
-            "price": "3400 ₽ (до 30 т.р) / 3000 ₽ (30-60 т.р) / 2800₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Кетгут с колющей иглой (игла 1/2)",
-            "name": "Кетгут простой USP 3/0(МР3) 75 см с колющей иглой 25 мм",
-            "qty": "20",
-            "price": "3400 ₽ (до 30 т.р) / 3000 ₽ (30-60 т.р) / 2800 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Кетгут с колющей иглой (игла 1/2)",
-            "name": "Кетгут простой USP 2/0(МР3.5) 75 см с колющей иглой 25 мм",
-            "qty": "20",
-            "price": "3400 ₽ (до 30 т.р) / 3000 ₽ (30-60 т.р) / 2800 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Кетгут с колющей иглой (игла 1/2)",
-            "name": "Кетгут простой USP 2/0(МР3.5) 75 см с колющей иглой 30 мм",
-            "qty": "20",
-            "price": "3400 ₽ (до 30 т.р) / 3000 ₽ (30-60 т.р) / 2800 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Кетгут с колющей иглой (игла 1/2)",
-            "name": "Кетгут простой USP 0(МР4) 75 см с колющей иглой 30 мм",
-            "qty": "20",
-            "price": "3400 ₽ (до 30 т.р) / 3000 ₽ (30-60 т.р) / 2800 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Кетгут с колющей иглой (игла 1/2)",
-            "name": "Кетгут простой USP 0(МР4) 75 см с колющей иглой 35 мм",
-            "qty": "20",
-            "price": "3400 ₽ (до 30 т.р) / 3000 ₽ (30-60 т.р) / 2800 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Кетгут с колющей иглой (игла 1/2)",
-            "name": "Кетгут простой USP 1(МР5) 75 см с колющей иглой 30 мм",
-            "qty": "20",
-            "price": "3400 ₽ (до 30 т.р) / 3000 ₽ (30-60 т.р) / 2800 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Кетгут с колющей иглой (игла 1/2)",
-            "name": "Кетгут простой USP 1(МР5) 75 см с колющей иглой 35 мм",
-            "qty": "20",
-            "price": "3400 ₽ (до 30 т.р) / 3000 ₽ (30-60 т.р) / 2800 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Кетгут с колющей иглой (игла 1/2)",
-            "name": "Кетгут простой USP 1(МР5) 75 см с колющей иглой 40 мм",
-            "qty": "20",
-            "price": "3400 ₽ (до 30 т.р) / 3000 ₽ (30-60 т.р) / 2800 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Кетгут с обратно-режущей иглой (игла 1/2)",
-            "name": "Кетгут простой USP 3/0(МР3) 75 см с режущей иглой 20 мм",
-            "qty": "20",
-            "price": "3400 ₽ (до 30 т.р) / 3000 ₽ (30-60 т.р) / 2800 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Кетгут с обратно-режущей иглой (игла 1/2)",
-            "name": "Кетгут простой USP 2/0(МР3.5) 75 см с режущей иглой 25 мм",
-            "qty": "20",
-            "price": "3400 ₽ (до 30 т.р) / 3000 ₽ (30-60 т.р) / 2800 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Кетгут с обратно-режущей иглой (игла 1/2)",
-            "name": "Кетгут простой USP 0(МР4) 75 см с режущей иглой 30 мм",
-            "qty": "20",
-            "price": "3400 ₽ (до 30 т.р) / 3000 ₽ (30-60 т.р) / 2800 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Кетгут с обратно-режущей иглой (игла 1/2)",
-            "name": "Кетгут простой USP 1(МР5) 75 см с режущей иглой 30 мм",
-            "qty": "20",
-            "price": "3400 ₽ (до 30 т.р) / 3000 ₽ (30-60 т.р) / 2800 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Ультрасорб (быстрорассасывающийся) аналог монокрил",
-            "name": "УЛЬТРАСОРБ мононить неокраш. USP 5/0 (MP1) 75см с реж. иглой 15мм 3/8",
-            "qty": "20",
-            "price": "5200 ₽ (до 30 т.р) / 4800 ₽ (30-60 т.р) / 4400 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Ультрасорб (быстрорассасывающийся) аналог монокрил",
-            "name": "УЛЬТРАСОРБ мононить неокраш. USP 4/0 (MP1.5) 75см с реж. иглой 20мм 3/8",
-            "qty": "20",
-            "price": "5200 ₽ (до 30 т.р) / 4800 ₽ (30-60 т.р) / 4400 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Ультрасорб (быстрорассасывающийся) аналог монокрил",
-            "name": "УЛЬТРАСОРБ мононить неокраш. USP 3/0 (MP2) 75см с реж. иглой 20мм 3/8",
-            "qty": "20",
-            "price": "5200 ₽ (до 30 т.р) / 4800 ₽ (30-60 т.р) / 4400 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Эндопротез-сетка Эсфил (Полипропиленовый сетчатый эндопротез)",
-            "name": "Эндопротез-сетка Эсфил легкая 6*11 см",
-            "qty": "1",
-            "price": "850 ₽ (до 30 т.р) / 780 ₽ (30-60 т.р) / 730 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Эндопротез-сетка Эсфил (Полипропиленовый сетчатый эндопротез)",
-            "name": "Эндопротез-сетка Эсфил легкая 8*12 см",
-            "qty": "1",
-            "price": "1000 ₽ (до 30 т.р) / 910 ₽ (30-60 т.р) / 840 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Эндопротез-сетка Эсфил (Полипропиленовый сетчатый эндопротез)",
-            "name": "Эндопротез-сетка Эсфил легкая 10*15 см",
-            "qty": "1",
-            "price": "1400 ₽ (до 30 т.р) / 1290 ₽ (30-60 т.р) / 1190 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Эндопротез-сетка Эсфил (Полипропиленовый сетчатый эндопротез)",
-            "name": "Эндопротез-сетка Эсфил легкая 15*15 см",
-            "qty": "1",
-            "price": "1800 ₽ (до 30 т.р) / 1670 ₽ (30-60 т.р) / 1540 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Эндопротез-сетка Эсфил (Полипропиленовый сетчатый эндопротез)",
-            "name": "Эндопротез-сетка Эсфил легкая 30*30 см",
-            "qty": "1",
-            "price": "5200 ₽ (до 30 т.р) / 4800 ₽ (30-60 т.р) / 4400 ₽ (от 60 т.р)",
-            "mfg": "ПТО \"Медтехника\""
-          },
-          {
-            "category": "Перчатки медицинские смотровые нитрил и латекс",
-            "name": "Перчатки неопудренные Нитрил (голубые, черные, фиолетовые) (XS,S,M,L, XL)",
-            "qty": "100 пар",
-            "price": "390 ₽",
-            "mfg": "Малайзия"
-          },
-          {
-            "category": "Перчатки медицинские смотровые нитрил и латекс",
-            "name": "Перчатки неопудренные Латекс (S, M, L)",
-            "qty": "100 пар",
-            "price": "430 ₽",
-            "mfg": "Малайзия"
-          },
-          {
-            "category": "Перчатки медицинские смотровые нитрил и латекс",
-            "name": "Перчатки неопудренные Винил (S, M, L)",
-            "qty": "100 пар",
-            "price": "190 ₽",
-            "mfg": "Китай"
-          },
-          {
-            "category": "Перчатки хирургические, стерильные",
-            "name": "Перчатки хирургические латексные опудренные (6.0 - 8.5)",
-            "qty": "50 пар",
-            "price": "1350 ₽",
-            "mfg": "Малайзия / Россия"
-          },
-          {
-            "category": "Перчатки хирургические, стерильные",
-            "name": "Перчатки хирургические латексные неопудренные (6.0 - 8.5)",
-            "qty": "50 пар",
-            "price": "1650 ₽",
-            "mfg": "Малайзия / Россия"
-          },
-          {
-            "category": "Перчатки хирургические, стерильные",
-            "name": "Перчатки хирургические текстурированные с анатомическим и згибом (6.0 - 8.5)",
-            "qty": "50 пар",
-            "price": "1850 ₽",
-            "mfg": "Малайзия"
-          },
-          {
-            "category": "Иглы хирургические колющие и режущие (нестерильные, многоразовые)",
-            "name": "Иглы хирургические в ассортименте (колющие, режущие, изогнутые 3/8, 1/2)",
-            "qty": "10 шт",
-            "price": "350 ₽",
-            "mfg": "ОАО МИЗ Ворсма"
-          },
-          {
-            "category": "Лейкопластырь NEOFIX",
-            "name": "Пластырь повязка NEOFIX Fibroderma 6см х 10см",
-            "qty": "50 шт",
-            "price": "1250 ₽",
-            "mfg": "Китай"
-          },
-          {
-            "category": "Лейкопластырь NEOFIX",
-            "name": "Пластырь повязка NEOFIX Fibroderma 10см х 15см",
-            "qty": "25 шт",
-            "price": "1150 ₽",
-            "mfg": "Китай"
-          },
-          {
-            "category": "Лейкопластырь NEOFIX",
-            "name": "Пластырь катушечный на тканевой основе 2.5см х 500см",
-            "qty": "12 шт",
-            "price": "680 ₽",
-            "mfg": "Китай"
-          },
-          {
-            "category": "Инцизная хирургическая пленка",
-            "name": "Пленка хирургическая инцизная 15см х 20см",
-            "qty": "10 шт",
-            "price": "1450 ₽",
-            "mfg": "Китай"
-          },
-          {
-            "category": "Инцизная хирургическая пленка",
-            "name": "Пленка хирургическая инцизная 30см х 40см",
-            "qty": "10 шт",
-            "price": "2900 ₽",
-            "mfg": "Китай"
-          },
-          {
-            "category": "Дезинфицирующие средства",
-            "name": "Дезинфицирующее средство кожный антисептик 1 л",
-            "qty": "1 шт",
-            "price": "450 ₽",
-            "mfg": "Россия"
-          },
-          {
-            "category": "Дезинфицирующие средства",
-            "name": "Дезинфицирующее средство концентрат для поверхностей и инструментов 1 л",
-            "qty": "1 шт",
-            "price": "620 ₽",
-            "mfg": "Россия"
-          },
-          {
-            "category": "Индикаторные полоски для дезинфицирующих средств",
-            "name": "Индикаторные полоски экспресс-контроля (уп. 100 шт)",
-            "qty": "1 уп",
-            "price": "380 ₽",
-            "mfg": "Россия"
-          },
-          {
-            "category": "Шприцы и системы",
-            "name": "Шприц 2 мл 2-компонентный с иглой 23G",
-            "qty": "100 шт",
-            "price": "420 ₽",
-            "mfg": "Китай / Россия"
-          },
-          {
-            "category": "Шприцы и системы",
-            "name": "Шприц 5 мл 3-компонентный с иглой 22G",
-            "qty": "100 шт",
-            "price": "580 ₽",
-            "mfg": "Китай / Россия"
-          },
-          {
-            "category": "Шприцы и системы",
-            "name": "Шприц 10 мл 3-компонентный с иглой 21G",
-            "qty": "100 шт",
-            "price": "790 ₽",
-            "mfg": "Китай / Россия"
-          },
-          {
-            "category": "Шприцы и системы",
-            "name": "Шприц 20 мл 3-компонентный с иглой 21G",
-            "qty": "50 шт",
-            "price": "650 ₽",
-            "mfg": "Китай / Россия"
-          },
-          {
-            "category": "Шприцы и системы",
-            "name": "Система для переливания инфузионных растворов PR",
-            "qty": "50 шт",
-            "price": "820 ₽",
-            "mfg": "Китай"
-          },
-          {
-            "category": "Иглы инъекционные для косметологии",
-            "name": "Иглы мезотерапевтические 30G (0.3x4mm / 0.3x13mm)",
-            "qty": "100 шт",
-            "price": "890 ₽",
-            "mfg": "Китай"
-          },
-          {
-            "category": "Иглы инъекционные для косметологии",
-            "name": "Иглы мезотерапевтические 32G (0.23x4mm)",
-            "qty": "100 шт",
-            "price": "1100 ₽",
-            "mfg": "Китай"
-          },
-          {
-            "category": "Зеркало гинекологическое, Китай",
-            "name": "Зеркало гинекологическое по Куско повор. фиксатор S / M / L",
-            "qty": "100 шт",
-            "price": "2850 ₽",
-            "mfg": "Китай"
-          },
-          {
-            "category": "Простынь нетканная",
-            "name": "Простыни в рулоне Спанбонд 0.8х200м (белые / голубые)",
-            "qty": "1 рул",
-            "price": "1150 ₽",
-            "mfg": "Россия"
-          },
-          {
-            "category": "Бахилы п/э",
-            "name": "Бахилы полиэтиленовые гладкие прочные (4 грамма)",
-            "qty": "1000 шт",
-            "price": "850 ₽",
-            "mfg": "Россия"
-          }
+       
+    {
+        "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
+        "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 6/0(МР0,7) 75 см",
+        "pack": "20",
+        "priceUpTo30k": 4660.0,
+        "price30to60k": 4260.0,
+        "priceOver60k": 3880.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
+        "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 5/0(МР1) 75 см",
+        "pack": "20",
+        "priceUpTo30k": 3540.0,
+        "price30to60k": 3340.0,
+        "priceOver60k": 2920.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
+        "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 4/0(МР1,5) 75 см",
+        "pack": "20",
+        "priceUpTo30k": 2800.0,
+        "price30to60k": 2560.0,
+        "priceOver60k": 2300.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
+        "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 3/0 (МР2), 75 см",
+        "pack": "20",
+        "priceUpTo30k": 2700.0,
+        "price30to60k": 2400.0,
+        "priceOver60k": 2100.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
+        "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 2/0 (МР3), 75 см",
+        "pack": "20",
+        "priceUpTo30k": 2700.0,
+        "price30to60k": 2400.0,
+        "priceOver60k": 2100.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
+        "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 0 (МР3,5), 75 см",
+        "pack": "20",
+        "priceUpTo30k": 2860.0,
+        "price30to60k": 2620.0,
+        "priceOver60k": 2360.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
+        "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 1 (МР4), 75 см",
+        "pack": "20",
+        "priceUpTo30k": 3100.0,
+        "price30to60k": 2840.0,
+        "priceOver60k": 2500.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
+        "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 2 (МР5), 75 см",
+        "pack": "20",
+        "priceUpTo30k": 3420.0,
+        "price30to60k": 3140.0,
+        "priceOver60k": 2760.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полигликолид (ПГА) с режущей и колющей иглой (игла 1/2)",
+        "name": "(ПГА) ПОЛИГЛИКОЛИД плетеный фиолетовый USP 3-4 (МР6), 75 см",
+        "pack": "20",
+        "priceUpTo30k": 3700.0,
+        "price30to60k": 3380.0,
+        "priceOver60k": 2880.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+
+    // Полипропилен (Монофил) с режущей и колющей иглой (игла 1/2)
+    {
+        "category": "Полипропилен (Монофил) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИПРОПИЛЕН MР 0,7 (USP 6-0), 75см, мононить синий нерассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 3320.0,
+        "price30to60k": 3040.0,
+        "priceOver60k": 2580.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полипропилен (Монофил) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИПРОПИЛЕН MР 1 (USP 5-0), 75см, мононить синий нерассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 3360.0,
+        "price30to60k": 3080.0,
+        "priceOver60k": 2680.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полипропилен (Монофил) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИПРОПИЛЕН MР 2 (USP 4-0), 75см, мононить синий нерассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 2490.0,
+        "price30to60k": 2280.0,
+        "priceOver60k": 1940.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полипропилен (Монофил) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИПРОПИЛЕН MР 2 (USP 3-0), 75см, мононить синий нерассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 2160.0,
+        "price30to60k": 1980.0,
+        "priceOver60k": 1680.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полипропилен (Монофил) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИПРОПИЛЕН MР 3 (USP 2-0), 75см, мононить синий нерассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 2160.0,
+        "price30to60k": 1980.0,
+        "priceOver60k": 1680.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полипропилен (Монофил) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИПРОПИЛЕН MР 3,5 (USP 0), 75см, мононить синий нерассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 2160.0,
+        "price30to60k": 1980.0,
+        "priceOver60k": 1680.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полипропилен (Монофил) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИПРОПИЛЕН MР 4 (USP 1), 75см, мононить синий нерассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 2160.0,
+        "price30to60k": 1980.0,
+        "priceOver60k": 1680.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полипропилен (Монофил) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИПРОПИЛЕН MР 5 (USP 2), 75см, мононить синий нерассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 2310.0,
+        "price30to60k": 2130.0,
+        "priceOver60k": 1810.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+
+    // Полидиаксанон (Моносорб) с режущей и колющей иглой (игла 1/2)
+    {
+        "category": "Полидиаксанон (Моносорб) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИДИОКСАНОН MР 0,5 (USP 7-0), 75см, мононить фиолетовый рассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 5770.0,
+        "price30to60k": 5290.0,
+        "priceOver60k": 4660.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полидиаксанон (Моносорб) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИДИОКСАНОН МР 0,7 (USP 6-0), 90 см, мононить фиолетовый рассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 5460.0,
+        "price30to60k": 5040.0,
+        "priceOver60k": 4410.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полидиаксанон (Моносорб) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИДИОКСАНОН МР 1 (USP 5-0), 75 см, мононить фиолетовый рассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 4900.0,
+        "price30to60k": 4360.0,
+        "priceOver60k": 3950.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полидиаксанон (Моносорб) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИДИОКСАНОН МР 1,5 (USP 4-0), 75 см, мононить фиолетовый рассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 4020.0,
+        "price30to60k": 3570.0,
+        "priceOver60k": 3210.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полидиаксанон (Моносорб) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИДИОКСАНОН MР 2 (USP 3-0), 75см, мононить фиолетовый рассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 3490.0,
+        "price30to60k": 3090.0,
+        "priceOver60k": 2790.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полидиаксанон (Моносорб) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИДИОКСАНОН МР 3 (USP 2-0), 75 см, мононить фиолетовый рассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 3570.0,
+        "price30to60k": 3150.0,
+        "priceOver60k": 2850.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полидиаксанон (Моносорб) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИДИОКСАНОН MР 3,5 (USP 0), 75см, мононить фиолетовый рассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 3820.0,
+        "price30to60k": 3400.0,
+        "priceOver60k": 3060.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полидиаксанон (Моносорб) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИДИОКСАНОН MР 4 (USP 1), 75см, мононить фиолетовый рассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 3990.0,
+        "price30to60k": 3530.0,
+        "priceOver60k": 3210.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полидиаксанон (Моносорб) с режущей и колющей иглой (игла 1/2)",
+        "name": "ПОЛИДИОКСАНОН MР 5 (USP 2), 75см, мононить фиолетовый рассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 4240.0,
+        "price30to60k": 3880.0,
+        "priceOver60k": 3400.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+
+    // Полигликолид-КО-ЛАКТИД (Викрил) с режущей и колющей иглой (игла 1/2)
+    {
+        "category": "Полигликолид-КО-ЛАКТИД (Викрил) с режущей и колющей иглой (игла 1/2)",
+        "name": "(ВИКРИЛ) ПОЛИГЛИКОЛИД-КО-ЛАКТИД MР 1 (USP 5-0), 75см, плетеный фиолетовый рассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 4620.0,
+        "price30to60k": 4200.0,
+        "priceOver60k": 3820.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полигликолид-КО-ЛАКТИД (Викрил) с режущей и колющей иглой (игла 1/2)",
+        "name": "(ВИКРИЛ) ПОЛИГЛИКОЛИД-КО-ЛАКТИД MР 1,5 (USP 4-0), 75см, плетеный фиолетовый рассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 3730.0,
+        "price30to60k": 3420.0,
+        "priceOver60k": 3100.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полигликолид-КО-ЛАКТИД (Викрил) с режущей и колющей иглой (игла 1/2)",
+        "name": "(ВИКРИЛ) ПОЛИГЛИКОЛИД-КО-ЛАКТИД MР 2 (USP 3-0), 75см, плетеный фиолетовый рассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 3310.0,
+        "price30to60k": 2940.0,
+        "priceOver60k": 2690.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полигликолид-КО-ЛАКТИД (Викрил) с режущей и колющей иглой (игла 1/2)",
+        "name": "(ВИКРИЛ) ПОЛИГЛИКОЛИД-КО-ЛАКТИД MР 3 (USP 2-0), 75см, плетеный фиолетовый рассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 3420.0,
+        "price30to60k": 3040.0,
+        "priceOver60k": 2770.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полигликолид-КО-ЛАКТИД (Викрил) с режущей и колющей иглой (игла 1/2)",
+        "name": "(ВИКРИЛ) ПОЛИГЛИКОЛИД-КО-ЛАКТИД MР 3,5 (USP 0), 75см, плетеный фиолетовый рассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 3550.0,
+        "price30to60k": 3150.0,
+        "priceOver60k": 2830.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+    {
+        "category": "Полигликолид-КО-ЛАКТИД (Викрил) с режущей и колющей иглой (игла 1/2)",
+        "name": "(ВИКРИЛ) ПОЛИГЛИКОЛИД-КО-ЛАКТИД MР 4 (USP 1), 75см, плетеный фиолетовый рассасывающийся",
+        "pack": "20",
+        "priceUpTo30k": 3780.0,
+        "price30to60k": 3360.0,
+        "priceOver60k": 3150.0,
+        "maker": "ПТО \"Медтехника\""
+    },
+
+    // Кетгут с колющей иглой (игла 1/2)
+    {
+        "category": "Кетгут с колющей иглой (игла 1/2)",
+        "name": "КЕТГУТ простой, MP1,5 (USP 5-0), длина 75см, игла колющая 20мм, 4/8, в упаковке 25 шт.",
+        "pack": "25",
+        "priceUpTo30k": 4970.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Кетгут с колющей иглой (игла 1/2)",
+        "name": "КЕТГУТ простой, MP2 (USP4-0), длина 75см, игла колющая 20мм, 4/8, в упаковке 25 шт.",
+        "pack": "25",
+        "priceUpTo30k": 4970.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Кетгут с колющей иглой (игла 1/2)",
+        "name": "КЕТГУТ простой, MP3 (USP3-0), длина 75см, игла колющая 25мм, 4/8, в упаковке 25 шт.",
+        "pack": "25",
+        "priceUpTo30k": 5100.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Кетгут с колющей иглой (игла 1/2)",
+        "name": "КЕТГУТ простой, MP3,5 (USP2-0), длина 75см, игла колющая 25мм, 4/8, в упаковке 25 шт.",
+        "pack": "25",
+        "priceUpTo30k": 5230.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Кетгут с колющей иглой (игла 1/2)",
+        "name": "КЕТГУТ простой, MP4 (USP0), длина 75см, игла колющая 40мм, 4/8, в упаковке 20шт.",
+        "pack": "20",
+        "priceUpTo30k": 4430.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Кетгут с колющей иглой (игла 1/2)",
+        "name": "КЕТГУТ простой, MP5 (USP1), длина 75см, игла колющая 35мм, 4/8, в упаковке 20шт.",
+        "pack": "20",
+        "priceUpTo30k": 5190.0,
+        "maker": "Линтекс"
+    },
+
+    // Кетгут с обратно-режущей иглой (игла 1/2)
+    {
+        "category": "Кетгут с обратно-режущей иглой (игла 1/2)",
+        "name": "КЕТГУТ простой, MP1,5 (USP 5-0), длина 75см, игла обратно-режущая 20мм, 4/8, в упаковке 25 шт.",
+        "pack": "25",
+        "priceUpTo30k": 5500.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Кетгут с обратно-режущей иглой (игла 1/2)",
+        "name": "КЕТГУТ простой, MP2 (USP4-0), длина 75см, игла обратно-режущая 20мм, 4/8, в упаковке 25 шт.",
+        "pack": "25",
+        "priceUpTo30k": 5500.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Кетгут с обратно-режущей иглой (игла 1/2)",
+        "name": "КЕТГУТ простой, MP3 (USP3-0), длина 75см, игла обратно-режущая 20мм, 4/8, в упаковке 25 шт.",
+        "pack": "25",
+        "priceUpTo30k": 5600.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Кетгут с обратно-режущей иглой (игла 1/2)",
+        "name": "КЕТГУТ простой, MP3,5 (USP2-0), длина 75см, игла обратно-режущая 25мм, 4/8, в упаковке 25 шт.",
+        "pack": "25",
+        "priceUpTo30k": 5880.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Кетгут с обратно-режущей иглой (игла 1/2)",
+        "name": "КЕТГУТ простой, MP4 (USP0), длина 75см, игла обратно-режущая 30мм, 4/8, в упаковке 20шт.",
+        "pack": "20",
+        "priceUpTo30k": 4850.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Кетгут с обратно-режущей иглой (игла 1/2)",
+        "name": "КЕТГУТ простой, MP5 (USP1), длина 75см, игла обратно-режущая 35мм, 4/8, в упаковке 20шт.",
+        "pack": "20",
+        "priceUpTo30k": 5600.0,
+        "maker": "Линтекс"
+    },
+
+    // Ультрасорб с колющей иглой (игла 1/2)
+    {
+        "category": "Ультрасорб с колющей иглой (игла 1/2)",
+        "name": "УЛЬТРАСОРБ мононить из сополимера гликолида и капролактона рассасывающаяся, окрашенная (фиолетовая), MP1 (USP 5-0), длина 75см, игла колющая 20мм, 4/8, в упаковке 25 шт.",
+        "pack": "25",
+        "priceUpTo30k": 4950.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Ультрасорб с колющей иглой (игла 1/2)",
+        "name": "УЛЬТРАСОРБ мононить из сополимера гликолида и капролактона рассасывающаяся, окрашенная (фиолетовая), MP1 (USP 5-0), длина 45см, игла колющая 20мм, 4/8, в упаковке 25 шт.",
+        "pack": "25",
+        "priceUpTo30k": 4450.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Ультрасорб с колющей иглой (игла 1/2)",
+        "name": "УЛЬТРАСОРБ мононить из сополимера гликолида и капролактона рассасывающаяся, окрашенная (фиолетовая), MP1,5 (USP4-0), длина 75см, игла колющая 20мм, 4/8, в упаковке 25 шт.",
+        "pack": "25",
+        "priceUpTo30k": 5300.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Ультрасорб с колющей иглой (игла 1/2)",
+        "name": "УЛЬТРАСОРБ мононить из сополимера гликолида и капролактона рассасывающаяся, окрашенная (фиолетовая), MP1,5 (USP4-0), длина 45см, игла колющая 20мм, 4/8, в упаковке 25 шт.",
+        "pack": "25",
+        "priceUpTo30k": 4800.0,
+        "maker": "Линтекс"
+    },
+{
+        "category": "Эндопротез-сетка Эсфил для восстановительной хирургии",
+        "name": "Эндопротез-сетка полипропиленовый для восстановительной хирургии ЭСФИЛ® стандартный, 6x11 см",
+        "pack": "шт",
+        "priceUpTo30k": 1230.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Эндопротез-сетка Эсфил для восстановительной хирургии",
+        "name": "Эндопротез-сетка полипропиленовый для восстановительной хирургии ЭСФИЛ® стандартный, 8x12 см",
+        "pack": "шт",
+        "priceUpTo30k": 1350.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Эндопротез-сетка Эсфил для восстановительной хирургии",
+        "name": "Эндопротез-сетка полипропиленовый для восстановительной хирургии ЭСФИЛ® стандартный, 15x10 см",
+        "pack": "шт",
+        "priceUpTo30k": 1920.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Эндопротез-сетка Эсфил для восстановительной хирургии",
+        "name": "Эндопротез-сетка полипропиленовый для восстановительной хирургии ЭСФИЛ® стандартный, 15x15 см",
+        "pack": "шт",
+        "priceUpTo30k": 2560.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Эндопротез-сетка Эсфил для восстановительной хирургии",
+        "name": "Эндопротез-сетка полипропиленовый для восстановительной хирургии ЭСФИЛ® стандартный, 30x15 см",
+        "pack": "шт",
+        "priceUpTo30k": 3330.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Эндопротез-сетка Эсфил для восстановительной хирургии",
+        "name": "Эндопротез-сетка полипропиленовый для восстановительной хирургии ЭСФИЛ® стандартный, 30x20 см",
+        "pack": "шт",
+        "priceUpTo30k": 4315.0,
+        "maker": "Линтекс"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки НИТРИЛОВЫЕ N 130 №100пар SFM  Supersoft Violet Blue 100 - р. XS (ОЧ. МАЛ.) / Нестер. Неопу",
+        "pack": "100 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 7.20,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки НИТРИЛОВЫЕ N 130 №100пар SFM  Supersoft Violet Blue 100 - р. S (МАЛ.) / Нестер. Неопу",
+        "pack": "100 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 7.20,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки НИТРИЛОВЫЕ N 130 №100пар SFM  Supersoft Violet Blue 100 - р. М (СРЕД.) / Нестер. Неопу",
+        "pack": "100 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 7.20,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки НИТРИЛОВЫЕ N 130 №100пар SFM  Supersoft Violet Blue 100 - р. L (БОЛ.) / Нестер. Неопу",
+        "pack": "100 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 7.20,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки НИТРИЛОВЫЕ N 130 №100пар SFM  Supersoft Violet Blue 100  -  р. XL (ОЧ.БОЛ.) / Нестер. Неопу",
+        "pack": "100 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 7.20,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки НИТРИЛОВЫЕ N 135 №100пар SFM Supersoft Pink 100 - р. S (МАЛ)/Нестер. Неопудр. Текстур.",
+        "pack": "100 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 9.50,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки НИТРИЛОВЫЕ N 135 №100пар SFM Supersoft Pink 100 - р. М (СРЕДН.)/Нестер. Неопудр. Текст",
+        "pack": "100 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 9.50,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки НИТРИЛОВЫЕ N 135 №100пар SFM Supersoft Pink 100 - р. L (БОЛ.)/Нестер. Неопудр. Текстур.",
+        "pack": "100 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 9.50,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки НИТРИЛОВЫЕ N 136 №100пар SFM  Supersoft Black 100 - р. S (МАЛ.)/Нестер. Неопудр. Текст",
+        "pack": "100 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 9.50,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки НИТРИЛОВЫЕ N 136 №100пар SFM  Supersoft Black 100 - р. М (СРЕДН.)/Нестер. Неопудр. Тек",
+        "pack": "100 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 9.50,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки НИТРИЛОВЫЕ N 136 №100пар SFM  Supersoft Black 100 - р. L (БОЛ.)/Нестер. Неопудр. Тексту",
+        "pack": "100 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 9.50,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки DERMAGRIP ULTRA LS см. нитрил. нестер. неопудр. (5½ (XS))",
+        "pack": "100 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 10.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки DERMAGRIP ULTRA LS см. нитрил. нестер. неопудр. (6½ (S))",
+        "pack": "100 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 10.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки DERMAGRIP ULTRA LS см. нитрил. нестер. неопудр. (7½ (M))",
+        "pack": "100 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 10.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки DERMAGRIP ULTRA LS см. нитрил. нестер. неопудр. (8½ (L))",
+        "pack": "100 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 10.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки MANUAL WN916 смотр. нестер. нитрил. (6½ (S))",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 8.50,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки MANUAL WN916 смотр. нестер. нитрил. (7½ (M))",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 8.50,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки MANUAL WN916 смотр. нестер. нитрил. (8½ (L))",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 8.50,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки MANUAL DC810 смотр. нестер. латекс. (6½ (S)",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 18.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки MANUAL DC810 смотр. нестер. латекс. (7½ (M)",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 18.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки MANUAL DC810 смотр. нестер. латекс. (8½ (L)",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 18.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки DERMAGRIP CLASSIC см. латекс. нестер. неопудр. (5½ (XS))",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 22.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки DERMAGRIP CLASSIC см. латекс. нестер. неопудр. (6½ (S))",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 22.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки DERMAGRIP CLASSIC см. латекс. нестер. неопудр. (7½ (M))",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 22.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки DERMAGRIP CLASSIC см. латекс. нестер. неопудр. (8½ (L))",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 22.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки медицинские смотровые нитрил и латекс",
+        "name": "Перчатки DERMAGRIP CLASSIC см. латекс. нестер. неопудр. (9 (XL))",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 22.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки хирургические, стерильные",
+        "name": "Перчатки EPIC SG PF хир. стер. латекс. неопудр. (6)",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 42.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки хирургические, стерильные",
+        "name": "Перчатки EPIC SG PF хир. стер. латекс. неопудр. (6½ (S))",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 42.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки хирургические, стерильные",
+        "name": "Перчатки EPIC SG PF хир. стер. латекс. неопудр. (7)",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 42.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки хирургические, стерильные",
+        "name": "Перчатки EPIC SG PF хир. стер. латекс. неопудр. (7½ (M))",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 42.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки хирургические, стерильные",
+        "name": "Перчатки EPIC SG PF хир. стер. латекс. неопудр. (8)",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 42.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Перчатки хирургические, стерильные",
+        "name": "Перчатки EPIC SG PF хир. стер. латекс. неопудр. (8½ (L))",
+        "pack": "50 пар",
+        "pricePerUnit": true,
+        "priceUpTo30k": 42.0,
+        "maker": "Импорт"
+    },
+    {
+        "category": "Иглы хирургические колющие и режущие (нестерильные, многоразовые)",
+        "name": "Игла хирург.м/раз. 21 мм, 3/8, №10 (d--0,68мм)",
+        "pack": "10",
+        "priceUpTo30k": 1960.0,
+        "maker": "Япония"
+    },
+    {
+        "category": "Иглы хирургические колющие и режущие (нестерильные, многоразовые)",
+        "name": "Игла хирург.м/раз. 24 мм, 3/8, №10 (d--0,68мм)",
+        "pack": "10",
+        "priceUpTo30k": 1960.0,
+        "maker": "Япония"
+    },
+    {
+        "category": "Иглы хирургические колющие и режущие (нестерильные, многоразовые)",
+        "name": "Игла хирург.м/раз. 28 мм, 3/8, №10 (d--0,78мм)",
+        "pack": "10",
+        "priceUpTo30k": 1960.0,
+        "maker": "Япония"
+    },
+    {
+        "category": "Иглы хирургические колющие и режущие (нестерильные, многоразовые)",
+        "name": "Игла хирург.м/раз. 32 мм, 1/2, № 10 (d--0,78мм)",
+        "pack": "10",
+        "priceUpTo30k": 1960.0,
+        "maker": "Япония"
+    },
+    {
+        "category": "Иглы хирургические колющие и режущие (нестерильные, многоразовые)",
+        "name": "Игла хирург.м/раз. 36 мм, 1/2, № 10 (d--0,88мм)",
+        "pack": "10",
+        "priceUpTo30k": 1960.0,
+        "maker": "Япония"
+    },
+    {
+        "category": "Иглы хирургические колющие и режущие (нестерильные, многоразовые)",
+        "name": "Игла хирург.м/раз. 41 мм, 1/2, № 10 (d--0,98мм)",
+        "pack": "10",
+        "priceUpTo30k": 1960.0,
+        "maker": "Япония"
+    },
+    {
+        "category": "Иглы хирургические колющие и режущие (нестерильные, многоразовые)",
+        "name": "Игла хирург.м/раз. 45 мм, 1/2, № 10 (d--1,08мм)",
+        "pack": "10",
+        "priceUpTo30k": 1960.0,
+        "maker": "Япония"
+    },
+    {
+        "category": "Иглы хирургические колющие и режущие (нестерильные, многоразовые)",
+        "name": "Игла хирург.м/раз.50 мм, 1/2, № 10 (d--1,08мм)",
+        "pack": "10",
+        "priceUpTo30k": 1960.0,
+        "maker": "Япония"
+    },
+    {
+        "category": "Лейкопластырь фиксирующий в рулоне NEOFIX",
+        "name": "Пластырь медицинский на тканевой основе NEOFIX T-Plast 1x500см, шт",
+        "pack": "24",
+        "priceUpTo30k": 624.0,
+        "maker": "Египет"
+    },
+    {
+        "category": "Лейкопластырь фиксирующий в рулоне NEOFIX",
+        "name": "Пластырь медицинский на тканевой основе NEOFIX T-Plast 2x500см, шт",
+        "pack": "12",
+        "priceUpTo30k": 536.4,
+        "maker": "Египет"
+    },
+    {
+        "category": "Лейкопластырь фиксирующий в рулоне NEOFIX",
+        "name": "Пластырь медицинский на тканевой основе NEOFIX T-Plast 3x500см, шт",
+        "pack": "12",
+        "priceUpTo30k": 828.0,
+        "maker": "Египет"
+    },
+    {
+        "category": "Инцизная хирургическая пленка",
+        "name": "Лейкопластырь LEIKO (ЛЕЙКО) фиксирующий медицинский, хирургический 15 см х 21 см (ИНЦИЗНАЯ ПЛЕНКА)/ уп-ка: 20 шт",
+        "pack": "1",
+        "priceUpTo30k": 58.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Инцизная хирургическая пленка",
+        "name": "Лейкопластырь LEIKO (ЛЕЙКО) фиксирующий медицинский, хирургический 20см х 36см (ИНЦИЗНАЯ ПЛЕНКА)/ уп-ка: 20 шт",
+        "pack": "1",
+        "priceUpTo30k": 136.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «ЗдравДез антисептик» -1 л (крышка)",
+        "pack": "1",
+        "priceUpTo30k": 325.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство (кожный антисептик) «ЗдравДез антисептик-гель» - 1 л (флип-топ), шт",
+        "pack": "1",
+        "priceUpTo30k": 399.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «ЗдравДез антисептик» - 50 мл (спрей), шт",
+        "pack": "1",
+        "priceUpTo30k": 75.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «АЛМАДЕЗ-экспресс» - 5 л (в канистре)",
+        "pack": "1",
+        "priceUpTo30k": 2514.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «АЛМАДЕЗ-экспресс» - 1 л (крышка)",
+        "pack": "1",
+        "priceUpTo30k": 520.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «АЛМАДЕЗ-экспресс» - 500 мл (триггер)",
+        "pack": "1",
+        "priceUpTo30k": 387.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «АЛМАДЕЗ-экспресс» - 750 мл (триггер)",
+        "pack": "1",
+        "priceUpTo30k": 435.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «АЛМАДЕЗ-экспресс» - 50 мл (спрей), шт",
+        "pack": "1",
+        "priceUpTo30k": 98.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Салфетки дезинфицирующие «Алмадез-экспресс» - №100 (16*13.5см) - флоупак, шт",
+        "pack": "1",
+        "priceUpTo30k": 440.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Салфетки дезинфицирующие «Алмадез-экспресс» - №100 (17*14,5см) в банке, шт",
+        "pack": "1",
+        "priceUpTo30k": 457.5,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «Алмадез-ликвид» - 1 л (крышка), шт",
+        "pack": "1",
+        "priceUpTo30k": 620.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «Алмадез-стерил» - 1 л (крышка), шт",
+        "pack": "1",
+        "priceUpTo30k": 669.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство с моющим эффектом «Алмадез» - 1 л (крышка)",
+        "pack": "1",
+        "priceUpTo30k": 605.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство с моющим эффектом «Алмадез-концентрат» - 5 л (в канистре)",
+        "pack": "1",
+        "priceUpTo30k": 2800.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «Алмадез-оптима» - 1 л (крышка)",
+        "pack": "1",
+        "priceUpTo30k": 255.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «Алмадез-оптима» - 50 мл (спрей), шт",
+        "pack": "1",
+        "priceUpTo30k": 85.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Салфетки дезинфицирующие «Алмадез оптима» - № 90 (16*13.5см) - флоупак",
+        "pack": "1",
+        "priceUpTo30k": 297.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «АЛМАДЕЗ-хлор» - 1 кг (таблетки 3.4 г - 300 таблеток)",
+        "pack": "1",
+        "priceUpTo30k": 519.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «Элдез-хлор» - 1 кг в банке (таблетки), шт",
+        "pack": "1",
+        "priceUpTo30k": 425.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Жидкое крем-мыло антибактериальное \"Алмадез Лайт\"- 1 л (крышка)",
+        "pack": "1",
+        "priceUpTo30k": 212.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Жидкое крем-мыло антибактериальное \"Алмадез Лайт\"- 5 л (канистра)",
+        "pack": "1",
+        "priceUpTo30k": 840.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Алмадез-Профи, 1л. (крышка, мыло)",
+        "pack": "1",
+        "priceUpTo30k": 316.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство (жидкое мыло) «Алмадез-профи» - 5 л (в канистре), шт",
+        "pack": "1",
+        "priceUpTo30k": 1090.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство с моющим действием «Алмадез-эко» - 1 л (крышка)",
+        "pack": "1",
+        "priceUpTo30k": 370.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство \"АВАНСЕПТ-СПРЕЙ\" 0,5  л. (триггер)",
+        "pack": "1",
+        "priceUpTo30k": 550.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «Алмадез-Гарант» - 1 л (крышка)",
+        "pack": "1",
+        "priceUpTo30k": 597.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «Алмадез-Гарант» - 5 л (в канистре)",
+        "pack": "1",
+        "priceUpTo30k": 2630.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «Алмадез-Гарант» - 750 мл (триггер)",
+        "pack": "1",
+        "priceUpTo30k": 549.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Алмадез-Дент, 1л. (крышка)",
+        "pack": "1",
+        "priceUpTo30k": 968.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «Алмадез-Некст» - 1 л (крышка)",
+        "pack": "1",
+        "priceUpTo30k": 365.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «Алмадез-Некст» - 750 мл (триггер)",
+        "pack": "1",
+        "priceUpTo30k": 355.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство с моющим эффектом «Медиадез-концентрат» - 5л (в канистре)",
+        "pack": "1",
+        "priceUpTo30k": 2850.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "АлмаВет, 5л. (евро)",
+        "pack": "1",
+        "priceUpTo30k": 2300.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство «Алмадез-эндо» - 1 л (крышка)",
+        "pack": "1",
+        "priceUpTo30k": 655.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство \"Элдез-ОФА\" - 1 л (крышка), шт",
+        "pack": "1",
+        "priceUpTo30k": 865.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Салфетки дезинфицирующие Элдез-ИН №100 (18*14см) (В БАНКЕ), шт",
+        "pack": "1",
+        "priceUpTo30k": 505.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство \"Элдез-ИН\" - 5 л (канистра)",
+        "pack": "1",
+        "priceUpTo30k": 1650.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство \"Элдез-Энзим\" - 1 л (крышка), шт",
+        "pack": "1",
+        "priceUpTo30k": 640.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дезинфицирующее средство \"Элдез-Энзим\" - 5л (канистра)",
+        "pack": "1",
+        "priceUpTo30k": 3030.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Крем для рук -Медицинский, 200 гр.",
+        "pack": "1",
+        "priceUpTo30k": 210.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Стаканчик мерный, 30 мл.",
+        "pack": "1",
+        "priceUpTo30k": 4.8,
+        "maker": "Россия"
+    },
+    {
+        "category": "Дезинфицирующие средства",
+        "name": "Дозатор локтевой МДУ-07 с пластиковой ручкой (Россия)",
+        "pack": "1",
+        "priceUpTo30k": 1110.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Индикаторные полоски для дезинфицирующих средств",
+        "name": "Индикаторные полоски Медиадез (100 тестов)",
+        "pack": "1",
+        "priceUpTo30k": 1290.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Индикаторные полоски для дезинфицирующих средств",
+        "name": "Индикаторные полоски Элдез-ИН (100 тестов)",
+        "pack": "1",
+        "priceUpTo30k": 1453.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Индикаторные полоски для дезинфицирующих средств",
+        "name": "Индикаторные полоски Элдез-ОФА (100 тестов), шт",
+        "pack": "1",
+        "priceUpTo30k": 1135.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Индикаторные полоски для дезинфицирующих средств",
+        "name": "Индикаторные полоски Алмадез (100 тестов), шт",
+        "pack": "1",
+        "priceUpTo30k": 1265.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Индикаторные полоски для дезинфицирующих средств",
+        "name": "Индикаторные полоски Алмадез-Эндо (100 тестов), шт",
+        "pack": "1",
+        "priceUpTo30k": 1060.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Набор реагентов для быстрого дифференцированного окрашивания биопрепаратов",
+        "name": "\"ДИАХИМ-ДИФФ-КВИК\") по ТУ 9398-066-27428909-2012, Комплектация №2, 100 мл, кат № 451М",
+        "pack": "1",
+        "priceUpTo30k": 2560.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Шприцы и системы Китай",
+        "name": "Шприц 1 мл (3-х) луер слип, игла 0,45х12 – 26G фасовка 100/3200",
+        "pack": "1",
+        "priceUpTo30k": 3.05,
+        "maker": "Китай"
+    },
+    {
+        "category": "Шприцы и системы Китай",
+        "name": "Шприц 2 мл (3-х) луер слип, игла 0,6х30 – 23G фасовка 100/2400",
+        "pack": "1",
+        "priceUpTo30k": 3.05,
+        "maker": "Китай"
+    },
+    {
+        "category": "Шприцы и системы Китай",
+        "name": "Шприц 3 мл (3-х) луер слип, игла 0,6х32 – 23G фасовка 100/2400",
+        "pack": "1",
+        "priceUpTo30k": 3.05,
+        "maker": "Китай"
+    },
+    {
+        "category": "Шприцы и системы Китай",
+        "name": "Шприц 5 мл (3-х) луер слип, игла 0,7х38 – 22G фасовка 100/1800",
+        "pack": "1",
+        "priceUpTo30k": 3.15,
+        "maker": "Китай"
+    },
+    {
+        "category": "Шприцы и системы Китай",
+        "name": "Шприц 10 мл (3-х) луер слип, игла 0,8х38 – 21G фасовка 60/1200",
+        "pack": "1",
+        "priceUpTo30k": 4.9,
+        "maker": "Китай"
+    },
+    {
+        "category": "Шприцы и системы Китай",
+        "name": "Шприц 20 мл (3-х) луер слип, игла 0,8х38 – 21G фасовка 36/720",
+        "pack": "1",
+        "priceUpTo30k": 6.95,
+        "maker": "Китай"
+    },
+    {
+        "category": "Шприцы и системы Китай",
+        "name": "Шприц 50 мл (3-х) луер слип, игла 1,2х40 – 18G фасовка 16/320",
+        "pack": "1",
+        "priceUpTo30k": 18.9,
+        "maker": "Китай"
+    },
+    {
+        "category": "Шприцы и системы Китай",
+        "name": "Система ИНФУЗИОННАЯ с пласт. шипом, дл. 150 см, Луер Слип, игла 0,80 х 40 - 21G фасовка 45/720 (Wuzh",
+        "pack": "1",
+        "priceUpTo30k": 11.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Иглы инъекционные для косметологии",
+        "name": "Иглы медицинские стерильные одноразовые SFM  0,26мм х 13 мм 31G ETW №50",
+        "pack": "1",
+        "priceUpTo30k": 35.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Иглы инъекционные для косметологии",
+        "name": "Иглы медицинские стерильные одноразовые SFM  0,23мм х13 мм 32G ETW №50",
+        "pack": "1",
+        "priceUpTo30k": 37.5,
+        "maker": "Германия"
+    },
+    {
+        "category": "Иглы инъекционные для косметологии",
+        "name": "Иглы медицинские стерильные одноразовые SFM   0,2мм х 4 мм 33G ETW №50",
+        "pack": "1",
+        "priceUpTo30k": 52.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Иглы инъекционные для косметологии",
+        "name": "Иглы медицинские стерильные одноразовые SFM   0,2мм х 6 мм 33G ETW №50",
+        "pack": "1",
+        "priceUpTo30k": 52.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Иглы инъекционные для косметологии",
+        "name": "Иглы медицинские стерильные одноразовые SFM   0,2мм х 8 мм 33G ETW №50",
+        "pack": "1",
+        "priceUpTo30k": 52.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Иглы инъекционные для косметологии",
+        "name": "Иглы медицинские стерильные одноразовые SFM  0,23мм х 4 мм 32G ETW №50",
+        "pack": "1",
+        "priceUpTo30k": 38.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Иглы инъекционные для косметологии",
+        "name": "Иглы медицинские стерильные одноразовые SFM  0,23мм х 6 мм 32G ETW №50",
+        "pack": "1",
+        "priceUpTo30k": 38.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Иглы инъекционные для косметологии",
+        "name": "Иглы медицинские стерильные одноразовые SFM  0,23мм х 8 мм 32G ETW №50",
+        "pack": "1",
+        "priceUpTo30k": 38.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Иглы инъекционные для косметологии",
+        "name": "Иглы медицинские стерильные одноразовые SFM  0,25мм х 4 мм 31G ETW №50",
+        "pack": "1",
+        "priceUpTo30k": 35.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Иглы инъекционные для косметологии",
+        "name": "Иглы медицинские стерильные одноразовые SFM  0,25мм х 6 мм 31G ETW №50",
+        "pack": "1",
+        "priceUpTo30k": 35.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Иглы инъекционные для косметологии",
+        "name": "Иглы медицинские стерильные одноразовые SFM  0,25мм х 8 мм 31G ETW №50",
+        "pack": "1",
+        "priceUpTo30k": 35.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Иглы инъекционные для косметологии",
+        "name": "Иглы медицинские стерильные одноразовые SFM  0,30мм х 4 мм 30G ETW №50",
+        "pack": "1",
+        "priceUpTo30k": 28.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Иглы инъекционные для косметологии",
+        "name": "Иглы медицинские стерильные одноразовые SFM  0,30мм х 6 мм 30G ETW №50",
+        "pack": "1",
+        "priceUpTo30k": 24.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Иглы инъекционные для косметологии",
+        "name": "Иглы медицинские стерильные одноразовые SFM 0,30мм х 13 мм 30G ETW №50",
+        "pack": "1",
+        "priceUpTo30k": 24.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Шприцы для косметологии, SFM (ГЕРМАНИЯ)",
+        "name": "Шприц с иглой одноразовый инсулиновый объемом 0,5 см. куб. (мл), 30G (0,3мм х 8мм), U-100",
+        "pack": "10",
+        "priceUpTo30k": 210.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Шприцы для косметологии, SFM (ГЕРМАНИЯ)",
+        "name": "Шприц с иглой одноразовый инсулиновый объемом 1,0 см. куб. (мл), 30G (0,3мм х 8мм), U-40",
+        "pack": "10",
+        "priceUpTo30k": 210.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Шприцы для косметологии, SFM (ГЕРМАНИЯ)",
+        "name": "Шприц с иглой одноразовый инсулиновый объемом 1,0 см. куб. (мл), 30G (0,3мм х 8мм), U-100",
+        "pack": "10",
+        "priceUpTo30k": 210.0,
+        "maker": "Германия"
+    },
+    {
+        "category": "Зеркало гинекологическое, Китай",
+        "name": "Зеркало гинекологическое полимерное по Куско №1 (S) прозрачное с центральным поворотным фиксатором",
+        "pack": "1",
+        "priceUpTo30k": 25.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Зеркало гинекологическое, Китай",
+        "name": "Зеркало гинекологическое полимерное по Куско №2 (M) прозрачное с центральным поворотным фиксатором",
+        "pack": "1",
+        "priceUpTo30k": 25.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Простынь нетканная",
+        "name": "80*200 простыня СТАНДАРТ Белый / рулон перф.100 шт",
+        "pack": "1",
+        "priceUpTo30k": 850.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Простынь нетканная",
+        "name": "70*80 простыня стандарт Белый / 200шт. в рулоне БЕЗ РУ",
+        "pack": "1",
+        "priceUpTo30k": 550.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Лаборатория",
+        "name": "GD Пробирка ПУСТАЯ 9мл (16*100), КРАСНАЯ крышка",
+        "pack": "1",
+        "priceUpTo30k": 7.9,
+        "maker": "Китай"
+    },
+    {
+        "category": "Лаборатория",
+        "name": "Пробирка вакуумная с крышкой, с наклейкой (ЭДТАК2), 13х75 мм, 4 мл",
+        "pack": "1",
+        "priceUpTo30k": 4.8,
+        "maker": "Китай"
+    },
+    {
+        "category": "Лаборатория",
+        "name": "Вакуумная пробирка для взятия венозной крови UNIVAC. 4,0 мл, ЭДТА-К3, 13х75 мм",
+        "pack": "1",
+        "priceUpTo30k": 9.8,
+        "maker": "Китай"
+    },
+    {
+        "category": "Лаборатория",
+        "name": "Пробирка вакуумная с крышкой, (с активатором свертывания и разделительным гелем), 13х75 мм, 4 мл",
+        "pack": "1",
+        "priceUpTo30k": 9.7,
+        "maker": "Китай"
+    },
+    {
+        "category": "Лаборатория",
+        "name": "Устройство для переноса мочи в вакуумную пробирку. длина наконечника 160 мм. ГУ /Перинт/ (уп-ка: 50",
+        "pack": "1",
+        "priceUpTo30k": 18.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Лаборатория",
+        "name": "Двусторонняя игла 21G (0,8*25мм) для вакуумного забора крови HONGDA С ВИЗУАЛ. КАМЕРОЙ FlashBack",
+        "pack": "1",
+        "priceUpTo30k": 7.75,
+        "maker": "Китай"
+    },
+    {
+        "category": "Лаборатория",
+        "name": "Игла двусторонняя Rustech с визуальной камерой, размер: 0,8х38мм (21Gх1 1/2\"). В уп./100 шт.",
+        "pack": "1",
+        "priceUpTo30k": 7.9,
+        "maker": "Китай"
+    },
+    {
+        "category": "Лаборатория",
+        "name": "Предметные стекла для микроскопов 75х25 мм, толщина 1,0-1,2 мм. (нешлифованные края) уп-ка: 72 шт.",
+        "pack": "1",
+        "priceUpTo30k": 2.6,
+        "maker": "Китай"
+    },
+    {
+        "category": "Зонды питательные и желудочные",
+        "name": "Зонд питательный назогастральный CH 05-40 см. ПВХ (закрытый конец) /INTEGRAL Medical/",
+        "pack": "1",
+        "priceUpTo30k": 14.5,
+        "maker": "Китай"
+    },
+    {
+        "category": "Зонды питательные и желудочные",
+        "name": "Зонд питательный назогастральный CH 06-40 см. ПВХ (закрытый конец) /INTEGRAL Medical/",
+        "pack": "1",
+        "priceUpTo30k": 14.5,
+        "maker": "Китай"
+    },
+    {
+        "category": "Зонды питательные и желудочные",
+        "name": "Зонд желудочный CH/FR 12, 110 см с РКП /INEKTA/",
+        "pack": "1",
+        "priceUpTo30k": 28.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Зонды питательные и желудочные",
+        "name": "Зонд желудочный CH/FR 14, 110 см с РКП /INEKTA/",
+        "pack": "1",
+        "priceUpTo30k": 34.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Зонды питательные и желудочные",
+        "name": "Зонд желудочный CH/FR 20, 110 см /INTEGRAL Medical/ 50",
+        "pack": "1",
+        "priceUpTo30k": 48.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Зонды питательные и желудочные",
+        "name": "Зонд желудочный CH/FR 22, 110 см с РКП /Хайянь",
+        "pack": "1",
+        "priceUpTo30k": 48.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Зонды питательные и желудочные",
+        "name": "Зонд желудочный CH/FR 26, 110 см с РКП /Хайянь",
+        "pack": "1",
+        "priceUpTo30k": 68.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Зонды питательные и желудочные",
+        "name": "Зонд желудочный CH/FR 28, 110 см с РКП /Хайянь",
+        "pack": "1",
+        "priceUpTo30k": 68.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Зонды питательные и желудочные",
+        "name": "Зонд желудочный CH/FR 32, 110 см /Хайянь/",
+        "pack": "1",
+        "priceUpTo30k": 78.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Прочая расходка",
+        "name": "Шпатель деревянный Ирбис стерильный (1600 шт)",
+        "pack": "1",
+        "priceUpTo30k": 1.8,
+        "maker": "Китай"
+    },
+    {
+        "category": "Прочая расходка",
+        "name": "Презерватив для УЗИ \"Диамед\"",
+        "pack": "1",
+        "priceUpTo30k": 9.9,
+        "maker": "Китай"
+    },
+    {
+        "category": "Прочая расходка",
+        "name": "Емкость-контейнер для разрушения шприцев и игл (иглоотсекатель) 0,25л Класс Б (желтый)",
+        "pack": "1",
+        "priceUpTo30k": 28.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Прочая расходка",
+        "name": "Гель УЗИ \"УЛЬТРАГЕЛЬ\" средней вязкости кан. 5 кг",
+        "pack": "1",
+        "priceUpTo30k": 950.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Прочая расходка",
+        "name": "Бинт мед н/стер. 7х14 6498 ГОСТ ФлоуПак (по 400 шт)",
+        "pack": "20",
+        "priceUpTo30k": 532.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Прочая расходка",
+        "name": "Отрезы 1000 см х 90 см марлевые мед нестер 6498 (цветная упаковка)",
+        "pack": "1",
+        "priceUpTo30k": 245.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Прочая расходка",
+        "name": "MASTER UNI 72х19мм лейкопл.полимер.медицин .бактер.телес.",
+        "pack": "1000",
+        "priceUpTo30k": 1500.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Катетер уретральный стерил. Buster/Kruuse д/собак 2,6*500 мм без стилета",
+        "pack": "1",
+        "priceUpTo30k": 317.2,
+        "maker": "Китай"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Катетер уретральный стерил. Buster/Kruuse д/собак 2,0*500 мм без стилета",
+        "pack": "1",
+        "priceUpTo30k": 317.2,
+        "maker": "Китай"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Катетер уретральный стерил. Buster/Kruuse д/кошек 1,3*130 мм со стилетом, 12 шт/уп",
+        "pack": "1",
+        "priceUpTo30k": 486.5,
+        "maker": "Китай"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Катетер уретральный стерил. Buster/Kruuse д/кошек 1,0*130 мм со стилетом 12 шт/уп",
+        "pack": "1",
+        "priceUpTo30k": 334.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Катетер уретральный стерил. VITAVET PRO/ВИТАВЕТ ПРО д/кошек 1,3 * 135 мм со стилетом",
+        "pack": "1",
+        "priceUpTo30k": 180.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Катетер уретральный стерил. VITAVET PRO/ВИТАВЕТ ПРО д/кошек 1,3 * 200 мм со стилетом",
+        "pack": "1",
+        "priceUpTo30k": 195.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Бинт \"VitaVet\" (бандаж) самофикс. ГОРЬКИЙ 2,5см х 4,5м цвет в ассортименте, шт",
+        "pack": "1",
+        "priceUpTo30k": 38.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Бинт \"VitaVet\" (бандаж) самофикс. ГОРЬКИЙ 5см х 4,5м цвет в ассортименте, шт",
+        "pack": "1",
+        "priceUpTo30k": 64.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Бинт \"VitaVet\" (бандаж) самофикс. ГОРЬКИЙ 7,5см х 4,5м цвет в ассортименте, шт",
+        "pack": "1",
+        "priceUpTo30k": 98.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Бинт \"VitaVet\" (бандаж) самофикс. ГОРЬКИЙ 10см х 4,5м цвет в ассортименте, шт",
+        "pack": "1",
+        "priceUpTo30k": 130.0,
+        "maker": "Китай"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Воротник защитный пластиковый 7,5 см (Прозрачный пластик)",
+        "pack": "1",
+        "priceUpTo30k": 61.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Воротник защитный пластиковый 10 см (Прозрачный пластик)",
+        "pack": "1",
+        "priceUpTo30k": 90.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Воротник защитный пластиковый 12,5 см (Прозрачный пластик)",
+        "pack": "1",
+        "priceUpTo30k": 99.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Воротник защитный пластиковый 15 см (Прозрачный пластик)",
+        "pack": "1",
+        "priceUpTo30k": 150.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Воротник защитный пластиковый 20 см (Прозрачный пластик)",
+        "pack": "1",
+        "priceUpTo30k": 188.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Воротник защитный пластиковый 25 см (Прозрачный пластик)",
+        "pack": "1",
+        "priceUpTo30k": 268.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Воротник защитный пластиковый 30 см (Прозрачный пластик)",
+        "pack": "1",
+        "priceUpTo30k": 300.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Воротник защитный пластиковый 35 см (Прозрачный пластик)",
+        "pack": "1",
+        "priceUpTo30k": 445.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Товары для животных",
+        "name": "Воротник защитный пластиковый 40 см (Прозрачный пластик)",
+        "pack": "1",
+        "priceUpTo30k": 550.0,
+        "maker": "Россия"
+    },
+    {
+        "category": "Бахилы п/э",
+        "name": "Бахилы медицинские п/э 0.030 мм \"ЭКСТРА С ДВОЙНОЙ РЕЗИНКОЙ №50/2000\"",
+        "pack": "пара",
+        "priceUpTo30k": 3.1,
+        "maker": "Россия"
+    },
+    {
+        "category": "Бахилы п/э",
+        "name": "Бахилы медицинские п/э 0,040 мм \"ЭКСТРА ПЛЮС С ДВОЙНОЙ РЕЗИНКОЙ №50/1500 пар",
+        "pack": "пара",
+        "priceUpTo30k": 3.2,
+        "maker": "Россия"
+    },
+    {
+        "category": "Бахилы п/э",
+        "name": "Бахилы медицинские п/э 0,050 мм \"СУПЕР 50 С ДВОЙНОЙ РЕЗИНКОЙ №50/2000 пар",
+        "pack": "пара",
+        "priceUpTo30k": 3.3,
+        "maker": "Россия"
+    }
         ];
 
-        // Инициализация при загрузке страницы
-        document.addEventListener("DOMContentLoaded", () => {
-            populateCategories();
-            renderTable(products);
+        let cart = [];
 
-            document.getElementById("searchInput").addEventListener("input", filterProducts);
-            document.getElementById("categorySelect").addEventListener("change", filterProducts);
-        });
-
-        // Заполнение списка категорий
-        function populateCategories() {
-            const categorySelect = document.getElementById("categorySelect");
-            const categories = [...new Set(products.map
-(p => p.category))].sort();
-            
-            categories.forEach(cat => {
-                if(cat) {
-                    const opt = document.createElement("option");
-                    opt.value = cat;
-                    opt.textContent = cat;
-                    categorySelect.appendChild(opt);
-                }
-            });
+        function getPackMultiplier(item) {
+            if (!item.pricePerUnit) return 1;
+            const combined = (item.pack + " " + item.name).toLowerCase();
+            const match = combined.match(/(\d+)\s*(пар|шт)/);
+            if (match) return parseInt(match[1]);
+            const numbers = item.pack.match(/\d+/);
+            if (numbers) return parseInt(numbers[0]);
+            return 1;
         }
 
-        // Отрисовка таблицы
-        function renderTable(items) {
-            const tbody = document.getElementById("productTableBody");
-            const noResults = document.getElementById("noResults");
-            const itemCount = document.getElementById("itemCount");
+        function isSutureMaterial(item) {
+            const cat = item.category.toLowerCase();
+            return cat.includes('полигликолид') || cat.includes('пга') || cat.includes('полипропилен');
+        }
 
-            tbody.innerHTML = "";
-            itemCount.textContent = items.length;
+        function getPackPriceForTier(item, tier) {
+            const mult = getPackMultiplier(item);
+            let unitPrice = item.priceUpTo30k;
 
-            if (items.length === 0) {
-                noResults.classList.remove("hidden");
-                return;
-            } else {
-                noResults.classList.add("hidden");
+            if (isSutureMaterial(item)) {
+                if (tier === 3 && item.priceOver60k !== undefined) unitPrice = item.priceOver60k;
+                else if (tier === 2 && item.price30to60k !== undefined) unitPrice = item.price30to60k;
             }
+            return unitPrice * mult;
+        }
 
-            items.forEach((item, index) => {
-                const tr = document.createElement("tr");
-                tr.className = "hover:bg-blue-50/50 transition border-b border-gray-100";
+        function getPackBasePrice(item) {
+            const mult = getPackMultiplier(item);
+            return (item.priceUpTo30k || 0) * mult;
+        }
+
+        function getCartTier(currentCart) {
+            let baseSum = 0;
+            currentCart.forEach(x => {
+                baseSum += getPackBasePrice(x) * x.qty;
+            });
+            if (baseSum > 60000) return 3;
+            if (baseSum >= 30000) return 2;
+            return 1;
+        }
+
+        function calculateCartSum(currentCart) {
+            let tier = getCartTier(currentCart);
+            let finalSum = 0;
+            currentCart.forEach(x => {
+                finalSum += getPackPriceForTier(x, tier) * x.qty;
+            });
+            return { sum: finalSum, tier: tier };
+        }
+
+        function init() {
+            let cats = [...new Set(products.map(p => p.category))];
+            let sel = document.getElementById('catSelect');
+            cats.forEach(c => {
+                let opt = document.createElement('option');
+                opt.value = c; opt.textContent = c;
+                sel.appendChild(opt);
+            });
+            render(products);
+        }
+
+        function render(list) {
+            let tbody = document.getElementById('tbody');
+            tbody.innerHTML = '';
+            let curCat = '';
+            list.forEach((item) => {
+                if (item.category !== curCat) {
+                    curCat = item.category;
+                    let r = document.createElement('tr');
+                    r.className = 'cat-row';
+                    r.innerHTML = `<td colspan="6">${curCat}</td>`;
+                    tbody.appendChild(r);
+                }
                 
+                let p1 = getPackPriceForTier(item, 1);
+                let p2 = getPackPriceForTier(item, 2);
+                let p3 = getPackPriceForTier(item, 3);
+
+                let tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="py-3 px-4 text-xs font-mono text-gray-400">${index + 1}</td>
-                    <td class="py-3 px-4">
-                        <div class="font-medium text-slate-900">${escapeHtml(item.name
-)}</div>
-                        <div class="text-xs text-blue-600 font-semibold mt-0.5">${escapeHtml(item.category)}</div>
-                    </td>
-                    <td class="py-3 px-4 text-xs text-gray-600">${escapeHtml(item.qty || '-')}</td>
-                    <td class="py-3 px-4 text-xs text-gray-600">${escapeHtml(item.mfg || '-')}</td>
-                    <td class="py-3 px-4 text-right font-semibold text-slate-900 whitespace-nowrap">${escapeHtml(item.price || '-')}</td>
+                    <td><b>${item.name}</b><br><small style="color:#666">${item.maker}</small></td>
+                    <td>${item.pack}</td>
+                    <td><b>${p1.toLocaleString()}р.</b></td>
+                    <td>${p2.toLocaleString()}р.</td>
+                    <td>${p3.toLocaleString()}р.</td>
+                    <td><button class="btn-add" onclick="add(${products.indexOf(item)})">+ Упаковку</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // Поиск и фильтрация
-        function filterProducts() {
-            const searchValue = document.getElementById("searchInput").value.toLowerCase().trim();
-            const selectedCategory = document.getElementById("categorySelect").value;
-
-            const filtered = products.filter(item => {
-                const matchesSearch = item.name.toLowerCase().includes(searchValue) || 
-                                      item.category.toLowerCase().includes(searchValue) ||
-                                      (item.mfg && item.mfg.toLowerCase().includes(searchValue));
-                const matchesCategory = selectedCategory === "" || item.category === selectedCategory;
-
-                return matchesSearch && matchesCategory;
+        function filterTable() {
+            let q = document.getElementById('searchIn').value.toLowerCase();
+            let cat = document.getElementById('catSelect').value;
+            let res = products.filter(p => {
+                let matchQ = p.name.toLowerCase().includes(q) || p.maker.toLowerCase().includes(q);
+                let matchCat = (cat === 'all' || p.category === cat);
+                return matchQ && matchCat;
             });
-
-            render
-          Table(filtered);
+            render(res);
         }
 
-        function escapeHtml(text) {
-            if(!text) return '';
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        function add(i) {
+            let p = products[i];
+            let ex = cart.find(x => x.name === p.name);
+            if (ex) { ex.qty++; } else { cart.push({...p, qty: 1}); }
+            updateCart();
         }
+
+        function changeQty(i, d) {
+            cart[i].qty += d;
+            if (cart[i].qty <= 0) cart.splice(i, 1);
+            updateCart();
+        }
+
+        function updateCart() {
+            let list = document.getElementById('cartList');
+            let count = document.getElementById('cartCount');
+            let totalEl = document.getElementById('cartTotal');
+            let tierInfoEl = document.getElementById('tierInfo');
+            
+            count.textContent = cart.reduce((s, x) => s + x.qty, 0);
+            if (cart.length === 0) {
+                list.innerHTML = '<div style="color: #888; font-size: 13px; text-align: center; padding: 15px 0;">Корзина пуста</div>';
+                totalEl.textContent = '0 руб.';
+                tierInfoEl.textContent = 'Базовая цена (до 30 тыс. руб.)';
+                return;
+            }
+
+            let calc = calculateCartSum(cart);
+            
+            if (calc.tier === 3) {
+                tierInfoEl.textContent = '🔥 Скидка >60 000 ₽ активна (на шовный материал)';
+            } else if (calc.tier === 2) {
+                tierInfoEl.textContent = '⚡ Скидка 30–60 000 ₽ активна (на шовный материал)';
+            } else {
+                tierInfoEl.textContent = '💡 Базовая цена. Добавьте шовных материалов до 30 000 ₽ для скидки!';
+            }
+
+            list.innerHTML = '';
+            cart.forEach((x, i) => {
+                let packPrice = getPackPriceForTier(x, calc.tier);
+                let div = document.createElement('div');
+                div.className = 'cart-item';
+                div.innerHTML = `
+                    <div style="flex:1;"><b>${x.name}</b><br><small style="color:#666">${packPrice.toLocaleString()}р. за уп. × ${x.qty} уп.</small></div>
+                    <div class="cart-controls">
+                        <button onclick="changeQty(${i}, -1)">-</button>
+                        <span>${x.qty}</span>
+                        <button onclick="changeQty(${i}, 1)">+</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+            totalEl.textContent = calc.sum.toLocaleString() + ' руб.';
+        }
+
+        function getResponsibleId(orgName) {
+            const org = orgName.toLowerCase();
+            if (org.includes('инео') || org.includes('премиум')) return 10;
+            if (org.includes('зубы мудрости')) return 12;
+            return 10;
+        }
+
+        function sendOrder(e) {
+            e.preventDefault();
+            if (cart.length === 0) { alert('Корзина пуста!'); return; }
+            
+            let orgName = document.getElementById('cOrg').value.trim();
+            let calc = calculateCartSum(cart);
+
+            let orderData = {
+                name: document.getElementById('cName').value,
+                phone: document.getElementById('cPhone').value,
+                org: orgName,
+                responsible_id: getResponsibleId(orgName),
+                items: cart.map(x => ({
+                    name: x.name,
+                    packsCount: x.qty,
+                    packSize: x.pack,
+                    pricePerPack: getPackPriceForTier(x, calc.tier),
+                    totalItemSum: getPackPriceForTier(x, calc.tier) * x.qty
+                })),
+                total: calc.sum
+            };
+            
+            if (isTelegram && tg.sendData) {
+                tg.sendData(JSON.stringify(orderData));
+                tg.close();
+                return;
+            }
+
+            fetch('https://your-bot-backend.com/api/order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderData)
+            }).then(() => {
+                alert(`Спасибо, заказ на сумму ${calc.sum.toLocaleString()} руб. успешно оформлен!`);
+                cart = [];
+                updateCart();
+                e.target.reset();
+            }).catch(() => {
+                alert(`Заказ успешно сформирован:\nСумма: ${calc.sum.toLocaleString()} руб.\nМенеджер ID: ${orderData.responsible_id}`);
+                cart = [];
+                updateCart();
+                e.target.reset();
+            });
+        }
+
+        window.onload = init;
     </script>
 </body>
 </html>
