@@ -1995,62 +1995,74 @@ let cart = [];
         totalEl.textContent = calc.sum.toLocaleString() + ' руб.';
     }
 
-    async function sendOrder(event) {
-        event.preventDefault();
-        if (cart.length === 0) { alert('Корзина пуста!'); return; }
-        
-        let name = document.getElementById('cName').value;
-        let phone = document.getElementById('cPhone').value;
-        let org = document.getElementById('cOrg').value;
-        let calc = calculateCartSum(cart);
+   async function sendOrder(event) {
+    event.preventDefault();
+    if (cart.length === 0) { 
+        alert('Корзина пуста!'); 
+        return; 
+    }
+    
+    let name = document.getElementById('cName').value;
+    let phone = document.getElementById('cPhone').value;
+    let org = document.getElementById('cOrg').value;
+    let calc = calculateCartSum(cart);
 
-        let productsDetails = cart.map(c => {
-            let price = getPackPriceForTier(c, calc.tier);
-            return `- ${c.name} (Упаковок: ${c.qty}, Цена за уп: ${price} руб.)`;
-        }).join('\n');
+    let productsDetails = cart.map(c => {
+        let price = getPackPriceForTier(c, calc.tier);
+        return `- ${c.name} (Упаковок: ${c.qty}, Цена за уп: ${price} руб.)`;
+    }).join('\n');
 
-        let comment = `Заказ из Telegram Mini App (ТРИЛАЙФ):\n\n` +
-                      `Организация: ${org}\n` +
-                      `Имя: ${name}\n` +
-                      `Телефон: ${phone}\n` +
-                      `Сумма заказа: ${calc.sum} руб.\n\n` +
-                      `Состав заказа:\n${productsDetails}`;
+    let comment = `Заказ из Telegram Mini App (ТРИЛАЙФ):\n\n` +
+                  `Организация: ${org}\n` +
+                  `Имя: ${name}\n` +
+                  `Телефон: ${phone}\n` +
+                  `Сумма заказа: ${calc.sum} руб.\n\n` +
+                  `Состав заказа:\n${productsDetails}`;
 
-        let webhookUrl = 'https://b24-5qamxl.bitrix24.ru/rest/12/w655fv23viloze7i/crm.lead.add.json';
-        
-        let leadData = {
-            fields: {
-                TITLE: `Заказ от ${org} (${name})`,
-                NAME: name,
-                PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
-                COMPANY_TITLE: org,
-                COMMENTS: comment,
-                SOURCE_ID: 'WEB'
-            }
-        };
+    let webhookUrl = 'https://b24-5qamxl.bitrix24.ru/rest/12/w655fv23viloze7i/crm.lead.add.json';
+    
+    let leadData = {
+        fields: {
+            TITLE: `Заказ от ${org ? org : name}`,
+            NAME: name,
+            PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
+            COMMENTS: comment,
+            SOURCE_ID: 'WEB'
+        }
+    };
 
-        try {
-            let response = await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(leadData)
-            });
+    try {
+        let response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(leadData)
+        });
 
-            if (response.ok) {
-                alert(`Спасибо, заказ на сумму ${calc.sum.toLocaleString()} руб. успешно оформлен!`);
-                cart = [];
-                updateCartUI();
-                event.target.reset();
-            } else {
-                throw new Error('Ошибка сервера');
-            }
-        } catch (error) {
-            alert(`Заказ успешно сформирован!\nСумма: ${calc.sum.toLocaleString()} руб.`);
+        let result = await response.json();
+        console.log('Ответ от Битрикс24:', result);
+
+        if (result.result) {
+            alert(`Спасибо! Заказ на сумму ${calc.sum.toLocaleString()} руб. успешно создан в Битрикс24 (Лид №${result.result}).`);
             cart = [];
             updateCartUI();
-            event.target.reset();
+            if (event.target && typeof event.target.reset === 'function') {
+                event.target.reset();
+            }
+            // Закрыть мини-приложение в Telegram (опционально)
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.close();
+            }
+        } else {
+            // Если Битрикс вернул ошибку внутри JSON (например, неверные права или формат)
+            console.error('Ошибка Битрикса:', result);
+            alert('Битрикс отклонил запрос: ' + (result.error_description || JSON.stringify(result)));
         }
+    } catch (error) {
+        // Ошибка сети или CORS
+        console.error('Ошибка сети / CORS:', error);
+        alert('Не удалось связаться с CRM. Ошибка: ' + error.message);
     }
+}
 
     window.onload = init;
     </script>
