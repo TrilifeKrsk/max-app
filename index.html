@@ -1992,7 +1992,8 @@
 
     let cart = [];
 
-    function getPackMultiplier(item) {
+   function getPackMultiplier(item) {
+        // Оставляем на случай, если где-то еще нужен множитель, но в ценах больше не используем
         const combined = (item.pack + " " + item.name).toLowerCase();
         const match = combined.match(/(\d+)\s*(пар|шт)/);
         if (match) return parseInt(match[1]);
@@ -2001,35 +2002,25 @@
         return 1;
     }
 
-   function isSutureMaterial(item) {
-    // Автоматически определяет товар по наличию пороговых цен «Трилайф»
-    return item.price30to60k !== undefined || item.priceOver60k !== undefined;
-}
+    function isSutureMaterial(item) {
+        // Автоматически определяет товар по наличию пороговых цен «Трилайф»
+        return item.price30to60k !== undefined || item.priceOver60k !== undefined;
+    }
 
     function getPackPriceForTier(item, tier) {
-        const mult = getPackMultiplier(item);
+        // Убрали умножение на * mult, так как цена в объекте уже указана за упаковку целиком
         let unitPrice = item.priceUpTo30k;
 
         if (isSutureMaterial(item)) {
             if (tier === 3 && item.priceOver60k !== undefined) unitPrice = item.priceOver60k;
             else if (tier === 2 && item.price30to60k !== undefined) unitPrice = item.price30to60k;
         }
-        return unitPrice * mult;
+        return unitPrice;
     }
 
     function getPackBasePrice(item) {
-        const mult = getPackMultiplier(item);
-        return (item.priceUpTo30k || 0) * mult;
-    }
-
-    function getCartTier(currentCart) {
-        let baseSum = 0;
-        currentCart.forEach(x => {
-            baseSum += getPackBasePrice(x) * x.qty;
-        });
-        if (baseSum > 60000) return 3;
-        if (baseSum >= 30000) return 2;
-        return 1;
+        // Убрали умножение на * mult
+        return item.priceUpTo30k || 0;
     }
 
     function calculateCartSum(currentCart) {
