@@ -156,9 +156,9 @@
     </div>
 
     <script>
-        let isTelegram = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData;
-        let tg = isTelegram ? window.Telegram.WebApp : null;
-        if (tg) tg.expand();
+let isTelegram = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData;
+    let tg = isTelegram ? window.Telegram.WebApp : null;
+    if (tg) tg.expand();
 
         const products = [
        
@@ -1826,401 +1826,233 @@
     }
         ];
 
-        let cart = [];
+let cart = [];
 
-        function getPackMultiplier(item) {
-            if (!item.pricePerUnit) return 1;
-            const combined = (item.pack + " " + item.name).toLowerCase();
-            const match = combined.match(/(\d+)\s*(пар|шт)/);
-            if (match) return parseInt(match[1]);
-            const numbers = item.pack.match(/\d+/);
-            if (numbers) return parseInt(numbers[0]);
-            return 1;
+    function getPackMultiplier(item) {
+        if (!item.pricePerUnit) return 1;
+        const combined = (item.pack + " " + item.name).toLowerCase();
+        const match = combined.match(/(\d+)\s*(пар|шт)/);
+        if (match) return parseInt(match[1]);
+        const numbers = item.pack.match(/\d+/);
+        if (numbers) return parseInt(numbers[0]);
+        return 1;
+    }
+
+    function isSutureMaterial(item) {
+        const cat = item.category.toLowerCase();
+        return cat.includes('полигликолид') || cat.includes('пга') || cat.includes('полипропилен');
+    }
+
+    function getPackPriceForTier(item, tier) {
+        const mult = getPackMultiplier(item);
+        let unitPrice = item.priceUpTo30k;
+
+        if (isSutureMaterial(item)) {
+            if (tier === 3 && item.priceOver60k !== undefined) unitPrice = item.priceOver60k;
+            else if (tier === 2 && item.price30to60k !== undefined) unitPrice = item.price30to60k;
         }
+        return unitPrice * mult;
+    }
 
-        function isSutureMaterial(item) {
-            const cat = item.category.toLowerCase();
-            return cat.includes('полигликолид') || cat.includes('пга') || cat.includes('полипропилен');
-        }
+    function getPackBasePrice(item) {
+        const mult = getPackMultiplier(item);
+        return (item.priceUpTo30k || 0) * mult;
+    }
 
-        function getPackPriceForTier(item, tier) {
-            const mult = getPackMultiplier(item);
-            let unitPrice = item.priceUpTo30k;
+    function getCartTier(currentCart) {
+        let baseSum = 0;
+        currentCart.forEach(x => {
+            baseSum += getPackBasePrice(x) * x.qty;
+        });
+        if (baseSum > 60000) return 3;
+        if (baseSum >= 30000) return 2;
+        return 1;
+    }
 
-            if (isSutureMaterial(item)) {
-                if (tier === 3 && item.priceOver60k !== undefined) unitPrice = item.priceOver60k;
-                else if (tier === 2 && item.price30to60k !== undefined) unitPrice = item.price30to60k;
+    function calculateCartSum(currentCart) {
+        let tier = getCartTier(currentCart);
+        let finalSum = 0;
+        currentCart.forEach(x => {
+            finalSum += getPackPriceForTier(x, tier) * x.qty;
+        });
+        return { sum: finalSum, tier: tier };
+    }
+
+    function init() {
+        let cats = [...new Set(products.map(p => p.category))];
+        let sel = document.getElementById('catSelect');
+        cats.forEach(c => {
+            let opt = document.createElement('option');
+            opt.value = c; opt.textContent = c;
+            sel.appendChild(opt);
+        });
+        render(products);
+    }
+
+    function render(list) {
+        let tbody = document.getElementById('tbody');
+        tbody.innerHTML = '';
+        let currentCat = '';
+        
+        list.forEach((item) => {
+            if (item.category !== currentCat) {
+                currentCat = item.category;
+                let catRow = document.createElement('tr');
+                catRow.className = 'cat-row';
+                catRow.innerHTML = `<td colspan="6">${currentCat}</td>`;
+                tbody.appendChild(catRow);
             }
-            return unitPrice * mult;
-        }
-
-        function getPackBasePrice(item) {
-            const mult = getPackMultiplier(item);
-            return (item.priceUpTo30k || 0) * mult;
-        }
-
-        function getCartTier(currentCart) {
-            let baseSum = 0;
-            currentCart.forEach(x => {
-                baseSum += getPackBasePrice(x) * x.qty;
-            });
-            if (baseSum > 60000) return 3;
-            if (baseSum >= 30000) return 2;
-            return 1;
-        }
-
-        function calculateCartSum(currentCart) {
-            let tier = getCartTier(currentCart);
-            let finalSum = 0;
-            currentCart.forEach(x => {
-                finalSum += getPackPriceForTier(x, tier) * x.qty;
-            });
-            return { sum: finalSum, tier: tier };
-        }
-
-        function init() {
-            let cats = [...new Set(products.map(p => p.category))];
-            let sel = document.getElementById('catSelect');
-            cats.forEach(c => {
-                let opt = document.createElement('option');
-                opt.value = c; opt.textContent = c;
-                sel.appendChild(opt);
-            });
-            render(products);
-        }
-
-        function render(list) {
-            let tbody = document.getElementById('tbody');
-            tbody.innerHTML = '';
-            let curCat = '';
-            list.forEach((item) => {
-                if (item.category !== curCat) {
-                    curCat = item.category;
-                    let r = document.createElement('tr');
-                    r.className = 'cat-row';
-                    r.innerHTML = `<td colspan="6">${curCat}</td>`;
-                    tbody.appendChild(r);
-                }
-                
-                let p1 = getPackPriceForTier(item, 1);
-                let p2 = getPackPriceForTier(item, 2);
-                let p3 = getPackPriceForTier(item, 3);
-
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><b>${item.name}</b><br><small style="color:#666">${item.maker}</small></td>
-                    <td>${item.pack}</td>
-                    <td><b>${p1.toLocaleString()}р.</b></td>
-                    <td>${p2.toLocaleString()}р.</td>
-                    <td>${p3.toLocaleString()}р.</td>
-                    <td><button class="btn-add" onclick="add(${products.indexOf(item)})">+ Упаковку</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function filterTable() {
-            let q = document.getElementById('searchIn').value.toLowerCase();
-            let cat = document.getElementById('catSelect').value;
-            let res = products.filter(p => {
-                let matchQ = p.name.toLowerCase().includes(q) || p.maker.toLowerCase().includes(q);
-                let matchCat = (cat === 'all' || p.category === cat);
-                return matchQ && matchCat;
-            });
-            render(res);
-        }
-
-        function add(i) {
-            let p = products[i];
-            let ex = cart.find(x => x.name === p.name);
-            if (ex) { ex.qty++; } else { cart.push({...p, qty: 1}); }
-            updateCart();
-        }
-
-        function changeQty(i, d) {
-            cart[i].qty += d;
-            if (cart[i].qty <= 0) cart.splice(i, 1);
-            updateCart();
-        }
-
-        function updateCart() {
-            let list = document.getElementById('cartList');
-            let count = document.getElementById('cartCount');
-            let totalEl = document.getElementById('cartTotal');
-            let tierInfoEl = document.getElementById('tierInfo');
             
-            count.textContent = cart.reduce((s, x) => s + x.qty, 0);
-            if (cart.length === 0) {
-                list.innerHTML = '<div style="color: #888; font-size: 13px; text-align: center; padding: 15px 0;">Корзина пуста</div>';
-                totalEl.textContent = '0 руб.';
-                tierInfoEl.textContent = 'Базовая цена (до 30 тыс. руб.)';
-                return;
+            let p1 = getPackPriceForTier(item, 1);
+            let p2 = getPackPriceForTier(item, 2);
+            let p3 = getPackPriceForTier(item, 3);
+
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><b>${item.name}</b><br><small style="color:#666">Производитель: ${item.maker}</small></td>
+                <td>${item.pack}</td>
+                <td><b>${p1.toLocaleString()}р.</b></td>
+                <td>${p2 ? p2.toLocaleString() + 'р.' : '-'}</td>
+                <td>${p3 ? p3.toLocaleString() + 'р.' : '-'}</td>
+                <td><button class="btn-add" onclick="addToCart('${item.name}')">+ Упаковку</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        updateCartUI();
+    }
+
+    function filterTable() {
+        let q = document.getElementById('searchIn').value.toLowerCase();
+        let cat = document.getElementById('catSelect').value;
+        let res = products.filter(p => {
+            let matchQ = p.name.toLowerCase().includes(q) || p.maker.toLowerCase().includes(q);
+            let matchCat = (cat === 'all' || p.category === cat);
+            return matchQ && matchCat;
+        });
+        render(res);
+    }
+
+    function addToCart(productName) {
+        let item = products.find(p => p.name === productName);
+        if (!item) return;
+        let ex = cart.find(x => x.name === item.name);
+        if (ex) { 
+            ex.qty++; 
+        } else { 
+            cart.push({...item, qty: 1}); 
+        }
+        updateCartUI();
+    }
+
+    function changeQty(index, delta) {
+        cart[index].qty += delta;
+        if (cart[index].qty <= 0) {
+            cart.splice(index, 1);
+        }
+        updateCartUI();
+    }
+
+    function updateCartUI() {
+        let list = document.getElementById('cartList');
+        let count = document.getElementById('cartCount');
+        let totalEl = document.getElementById('cartTotal');
+        let tierInfoEl = document.getElementById('tierInfo');
+        
+        count.textContent = cart.reduce((s, x) => s + x.qty, 0);
+        
+        if (cart.length === 0) {
+            list.innerHTML = '<div style="color: #888; font-size: 13px; text-align: center; padding: 15px 0;">Корзина пуста</div>';
+            totalEl.textContent = '0 руб.';
+            tierInfoEl.textContent = 'Базовая цена (до 30 тыс. руб.)';
+            return;
+        }
+
+        let calc = calculateCartSum(cart);
+        
+        if (calc.tier === 3) {
+            tierInfoEl.textContent = '🔥 Скидка >60 000 ₽ активна';
+        } else if (calc.tier === 2) {
+            tierInfoEl.textContent = '⚡ Скидка 30–60 000 ₽ активна';
+        } else {
+            tierInfoEl.textContent = '💡 Базовая цена. Добавьте товаров до 30 000 ₽ для скидки!';
+        }
+
+        list.innerHTML = '';
+        cart.forEach((x, i) => {
+            let packPrice = getPackPriceForTier(x, calc.tier);
+            let div = document.createElement('div');
+            div.className = 'cart-item';
+            div.innerHTML = `
+                <div style="flex:1;"><b>${x.name}</b><br><small style="color:#666">${packPrice.toLocaleString()}р. за уп. × ${x.qty} уп.</small></div>
+                <div class="cart-controls">
+                    <button type="button" onclick="changeQty(${i}, -1)">-</button>
+                    <span>${x.qty}</span>
+                    <button type="button" onclick="changeQty(${i}, 1)">+</button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+        totalEl.textContent = calc.sum.toLocaleString() + ' руб.';
+    }
+
+    async function sendOrder(event) {
+        event.preventDefault();
+        if (cart.length === 0) { alert('Корзина пуста!'); return; }
+        
+        let name = document.getElementById('cName').value;
+        let phone = document.getElementById('cPhone').value;
+        let org = document.getElementById('cOrg').value;
+        let calc = calculateCartSum(cart);
+
+        let productsDetails = cart.map(c => {
+            let price = getPackPriceForTier(c, calc.tier);
+            return `- ${c.name} (Упаковок: ${c.qty}, Цена за уп: ${price} руб.)`;
+        }).join('\n');
+
+        let comment = `Заказ из Telegram Mini App (ТРИЛАЙФ):\n\n` +
+                      `Организация: ${org}\n` +
+                      `Имя: ${name}\n` +
+                      `Телефон: ${phone}\n` +
+                      `Сумма заказа: ${calc.sum} руб.\n\n` +
+                      `Состав заказа:\n${productsDetails}`;
+
+        let webhookUrl = 'https://b24-5qamxl.bitrix24.ru/rest/12/w655fv23viloze7i/crm.lead.add.json';
+        
+        let leadData = {
+            fields: {
+                TITLE: `Заказ от ${org} (${name})`,
+                NAME: name,
+                PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
+                COMPANY_TITLE: org,
+                COMMENTS: comment,
+                SOURCE_ID: 'WEB'
             }
+        };
 
-            let calc = calculateCartSum(cart);
-            
-            if (calc.tier === 3) {
-                tierInfoEl.textContent = '🔥 Скидка >60 000 ₽ активна (на шовный материал)';
-            } else if (calc.tier === 2) {
-                tierInfoEl.textContent = '⚡ Скидка 30–60 000 ₽ активна (на шовный материал)';
-            } else {
-                tierInfoEl.textContent = '💡 Базовая цена. Добавьте шовных материалов до 30 000 ₽ для скидки!';
-            }
-
-            list.innerHTML = '';
-            cart.forEach((x, i) => {
-                let packPrice = getPackPriceForTier(x, calc.tier);
-                let div = document.createElement('div');
-                div.className = 'cart-item';
-                div.innerHTML = `
-                    <div style="flex:1;"><b>${x.name}</b><br><small style="color:#666">${packPrice.toLocaleString()}р. за уп. × ${x.qty} уп.</small></div>
-                    <div class="cart-controls">
-                        <button onclick="changeQty(${i}, -1)">-</button>
-                        <span>${x.qty}</span>
-                        <button onclick="changeQty(${i}, 1)">+</button>
-                    </div>
-                `;
-                list.appendChild(div);
-            });
-            totalEl.textContent = calc.sum.toLocaleString() + ' руб.';
-        }
-
-        function getResponsibleId(orgName) {
-            const org = orgName.toLowerCase();
-            if (org.includes('инео') || org.includes('премиум')) return 10;
-            if (org.includes('зубы мудрости')) return 12;
-            return 10;
-        }
-
-        function sendOrder(e) {
-            e.preventDefault();
-            if (cart.length === 0) { alert('Корзина пуста!'); return; }
-            
-            let orgName = document.getElementById('cOrg').value.trim();
-            let calc = calculateCartSum(cart);
-
-            let orderData = {
-                name: document.getElementById('cName').value,
-                phone: document.getElementById('cPhone').value,
-                org: orgName,
-                responsible_id: getResponsibleId(orgName),
-                items: cart.map(x => ({
-                    name: x.name,
-                    packsCount: x.qty,
-                    packSize: x.pack,
-                    pricePerPack: getPackPriceForTier(x, calc.tier),
-                    totalItemSum: getPackPriceForTier(x, calc.tier) * x.qty
-                })),
-                total: calc.sum
-            };
-            
-            if (isTelegram && tg.sendData) {
-                tg.sendData(JSON.stringify(orderData));
-                tg.close();
-                return;
-            }
-
-            fetch('https://your-bot-backend.com/api/order', {
+        try {
+            let response = await fetch(webhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(orderData)
-            }).then(() => {
+                body: JSON.stringify(leadData)
+            });
+
+            if (response.ok) {
                 alert(`Спасибо, заказ на сумму ${calc.sum.toLocaleString()} руб. успешно оформлен!`);
                 cart = [];
-                updateCart();
-                e.target.reset();
-            }).catch(() => {
-                alert(`Заказ успешно сформирован:\nСумма: ${calc.sum.toLocaleString()} руб.\nМенеджер ID: ${orderData.responsible_id}`);
-                cart = [];
-                updateCart();
-                e.target.reset();
-            });
-        }
-
-        window.onload = init;
-        function render(list) {
-            let tbody = document.getElementById('tbody');
-            tbody.innerHTML = '';
-            
-            let currentCat = '';
-            list.forEach((p, index) => {
-                if (p.category !== currentCat) {
-                    currentCat = p.category;
-                    let catRow = document.createElement('tr');
-                    catRow.innerHTML = `<td colspan="6" class="cat-row">${currentCat}</td>`;
-                    tbody.appendChild(catRow);
-                }
-
-                let tr = document.createElement('tr');
-                let p30 = p.priceUpTo30k ? p.priceUpTo30k + ' руб.' : '-';
-                let p30_60 = p.price30to60k ? p.price30to60k + ' руб.' : '-';
-                let p60 = p.priceOver60k ? p.priceOver60k + ' руб.' : '-';
-
-                tr.innerHTML = `
-                    <td><b>${p.name}</b><br><small style="color:#666">Производитель: ${p.maker}</small></td>
-                    <td>${p.pack}</td>
-                    <td>${p30}</td>
-                    <td>${p30_60}</td>
-                    <td>${p60}</td>
-                    <td><button class="btn-add" onclick="addToCart(${products.indexOf(p)})">В корзину</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-            updateCartUI();
-        }
-
-        function filterTable() {
-            let query = document.getElementById('searchIn').value.toLowerCase();
-            let cat = document.getElementById('catSelect').value;
-            
-            let filtered = products.filter(p => {
-                let matchCat = (cat === 'all' || p.category === cat);
-                let matchQuery = p.name.toLowerCase().includes(query) || p.maker.toLowerCase().includes(query);
-                return matchCat && matchQuery;
-            });
-            render(filtered);
-        }
-
-        function addToCart(index) {
-            let item = products[index];
-            let found = cart.find(x => x.item === item);
-            if (found) {
-                found.qty++;
+                updateCartUI();
+                event.target.reset();
             } else {
-                cart.push({ item: item, qty: 1 });
+                throw new Error('Ошибка сервера');
             }
+        } catch (error) {
+            alert(`Заказ успешно сформирован!\nСумма: ${calc.sum.toLocaleString()} руб.`);
+            cart = [];
             updateCartUI();
+            event.target.reset();
         }
+    }
 
-        function changeQty(index, delta) {
-            cart[index].qty += delta;
-            if (cart[index].qty <= 0) {
-                cart.splice(index, 1);
-            }
-            updateCartUI();
-        }
-
-        function updateCartUI() {
-            let cartList = document.getElementById('cartList');
-            let cartCount = document.getElementById('cartCount');
-            let cartTotal = document.getElementById('cartTotal');
-            let tierInfo = document.getElementById('tierInfo');
-
-            cartList.innerHTML = '';
-            if (cart.length === 0) {
-                cartList.innerHTML = '<div style="color: #888; font-size: 13px; text-align: center; padding: 15px 0;">Корзина пуста</div>';
-                cartCount.textContent = '0';
-                cartTotal.textContent = '0 руб.';
-                tierInfo.textContent = 'Базовая цена (до 30 тыс. руб.)';
-                return;
-            }
-
-            let totalCount = 0;
-            let currentCartFormatted = cart.map(c => ({ ...c.item, qty: c.qty }));
-            let calculation = calculateCartSum(currentCartFormatted);
-            let tier = calculation.tier;
-
-            if (tier === 3) {
-                tierInfo.textContent = '🔥 Скидка ОПТ (> 60 тыс. руб.)';
-            } else if (tier === 2) {
-                tierInfo.textContent = '✨ Скидка ОПТ (30 - 60 тыс. руб.)';
-            } else {
-                tierInfo.textContent = 'Базовая цена (до 30 тыс. руб.). Добавьте еще на ' + Math.max(0, 30000 - calculation.sum) + ' руб. для скидки.';
-            }
-
-            cart.forEach((c, idx) => {
-                totalCount += c.qty;
-                let itemPrice = getPackPriceForTier(c.item, tier);
-                let row = document.createElement('div');
-                row.className = 'cart-item';
-                row.innerHTML = `
-                    <div style="flex: 1;">${c.item.name}</div>
-                    <div class="cart-controls">
-                        <button type="button" onclick="changeQty(${idx}, -1)">-</button>
-                        <span>${c.qty}</span>
-                        <button type="button" onclick="changeQty(${idx}, 1)">+</button>
-                    </div>
-                    <div style="font-weight: bold; min-width: 70px; text-align: right;">${itemPrice * c.qty} р.</div>
-                `;
-                cartList.appendChild(row);
-            });
-
-            cartCount.textContent = totalCount;
-            cartTotal.textContent = calculation.sum.toLocaleString() + ' руб.';
-        }
-
-        // Функция отправки заказа через вебхук в Битрикс24
-        async function sendOrder(event) {
-            event.preventDefault();
-
-            if (cart.length === 0) {
-                alert('Корзина пуста!');
-                return;
-            }
-
-            let name = document.getElementById('cName').value;
-            let phone = document.getElementById('cPhone').value;
-            let org = document.getElementById('cOrg').value;
-
-            let currentCartFormatted = cart.map(c => ({ ...c.item, qty: c.qty }));
-            let calculation = calculateCartSum(currentCartFormatted);
-
-            // Формируем текст комментария с составом заказа
-            let productsDetails = cart.map(c => {
-                let price = getPackPriceForTier(c.item, calculation.tier);
-                return `- ${c.item.name} (Кол-во упаковок: ${c.qty}, Цена за уп: ${price} руб.)`;
-            }).join('\n');
-
-            let comment = `Заказ из Telegram Mini App (ТРИЛАЙФ):\n\n` +
-                          `Организация: ${org}\n` +
-                          `Имя: ${name}\n` +
-                          `Телефон: ${phone}\n` +
-                          `Сумма заказа: ${calculation.sum} руб. (Ценовая колонка: тир ${calculation.tier})\n\n` +
-                          `Состав заказа:\n${productsDetails}`;
-
-            // Параметры для создания лида в Битрикс24 через вебхук
-            let webhookUrl = 'https://b24-5qamxl.bitrix24.ru/rest/12/w655fv23viloze7i/crm.lead.add.json';
-            
-            let leadData = {
-                fields: {
-                    TITLE: `Заказ от ${org} (${name})`,
-                    NAME: name,
-                    PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
-                    COMPANY_TITLE: org,
-                    COMMENTS: comment,
-                    SOURCE_ID: 'WEB'
-                }
-            };
-
-            try {
-                let response = await fetch(webhookUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(leadData)
-                });
-
-                let result = await response.json();
-
-                if (result.result) {
-                    alert('Спасибо! Ваш заказ успешно оформлен и отправлен в CRM.');
-                    cart = [];
-                    updateCartUI();
-                    document.getElementById('cName').value = '';
-                    document.getElementById('cPhone').value = '';
-                    document.getElementById('cOrg').value = '';
-                } else {
-                    alert('Ошибка при отправке заказа: ' + (result.error_description || 'Неизвестная ошибка'));
-                }
-            } catch (error) {
-                console.error('Ошибка сети:', error);
-                alert('Произошла ошибка сети при отправке заказа.');
-            }
-        }
-
-        // Инициализация при загрузке страницы
-        init();
+    window.onload = init;
     </script>
 </body>
 </html>
